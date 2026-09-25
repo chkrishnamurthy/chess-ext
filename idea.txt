@@ -1,0 +1,163 @@
+PROJECT PLAN: CHESS BREAK — A CHROME EXTENSION YOU CAN ACTUALLY PLAY
+
+1. PRODUCT IDEA
+
+Build a self-contained chess game for short breaks inside Chrome.
+
+Core promise:
+“Open the extension, solve a chess challenge or play a few moves against
+the computer, then return to your work.”
+
+The extension should work without Chess.com, Lichess, an account, or an
+internet connection.
+
+2. WHO IT IS FOR
+
+- Beginners learning checkmate patterns.
+- Intermediate players who want short tactical practice.
+- People who want a quick chess game during a work or study break.
+
+3. THE TWO MAIN MODES
+
+A. Checkmate Challenge — the main feature
+- Choose Mate in 1, Mate in 2, or Mate in 3.
+- Move pieces on a real interactive chessboard.
+- The opponent responds automatically.
+- Show whether the chosen move preserves the forced mate.
+- After completion, explain the key idea and the opponent’s defense.
+- Include a hint button, but reveal hints gradually.
+- Provide a daily challenge and an unlimited practice mode.
+
+B. Finish the Position — the differentiating game mode
+- Start from a selected favourable position.
+- Play against a computer opponent until checkmate, draw, or resignation.
+- Teach players to convert a tactical advantage into a completed game.
+- Offer beginner and intermediate bot difficulty.
+- Save the game automatically after every move.
+
+Later: add a normal game from the starting position if users request it.
+Do not make multiplayer part of the first release.
+
+4. CHROME USER EXPERIENCE
+
+Toolbar popup:
+- Opens immediately to today’s challenge or “Continue game.”
+- Contains one readable board and only essential controls.
+- Best for puzzles and very short sessions.
+
+Side panel:
+- Used for longer games against the computer.
+- Remains available while the user changes browser tabs.
+
+Persistence:
+- Save the exact board position, move history, puzzle attempt, and settings
+  after every move.
+- Reopening the extension must resume at the same position.
+
+5. FIRST RELEASE SCREENS
+
+Home
+  [Today's Challenge] [Mate in 1] [Mate in 2] [Mate in 3]
+  [Finish the Position] [Continue Game]
+
+Puzzle
+  Board
+  Side to move + objective
+  Hint | Reset | Next
+  Explanation shown only after solving or requesting the solution
+
+Game
+  Board
+  Bot difficulty | New Game | Undo | Resign
+  Clear result screen and option to review moves
+
+Progress
+  Puzzles solved by category
+  Recent mistakes to retry
+  Daily streak
+  No account required
+
+6. CONTENT AND GAME RULES
+
+- Start with a curated, locally packaged selection of good puzzles.
+- Lichess publishes a CC0 puzzle database that can supply positions.
+- Preprocess and verify every selected puzzle before packaging it.
+- Ensure Mate in N means a forced checkmate on the player’s Nth move.
+- Accept every valid mating move for Mate in 1, even when more than one
+  solution exists.
+- Check legal moves, castling, en passant, promotion, checkmate, stalemate,
+  repetition, and other draw conditions correctly.
+- Exclude confusing or poorly rated puzzles from the initial collection.
+- Keep puzzle solutions hidden until the user solves or gives up.
+
+7. IMPLEMENTATION APPROACH
+
+- Chrome Manifest V3 extension.
+- TypeScript interface with a compact, responsive chessboard.
+- Use a maintained chess rules library rather than implementing all chess
+  rules from scratch.
+- Run a packaged chess engine locally for bot play; do not download
+  executable extension code at runtime.
+- Store games and progress locally in the browser.
+- Keep the extension functional offline.
+- Request only permissions needed for storage and the side panel.
+- Do not read Chess.com/Lichess live games or inject move suggestions into
+  any competitive game.
+
+8. RELEASE PHASES
+
+Phase 1 — Playable prototype
+- Build popup board and legal moves.
+- Add Mate in 1, 2, and 3.
+- Add opponent replies, hints, explanations, and automatic saving.
+- Test the board at actual popup size.
+
+Phase 2 — Game experience
+- Add Finish the Position against a local bot.
+- Add side panel and resume behavior.
+- Add progress and “retry mistakes.”
+
+Phase 3 — Private beta
+- Give it to 20–30 chess players at different skill levels.
+- Observe whether they understand the objective without instructions.
+- Ask whether they return voluntarily during the following week.
+- Fix confusing puzzles, small-board usability, and slow bot responses.
+
+Phase 4 — Chrome Web Store
+- Prepare screenshots showing real gameplay.
+- Describe it as a short chess game and checkmate trainer.
+- Publish the free version with a privacy policy and support contact.
+- Track installs, repeat use, completed puzzles, and reported issues.
+
+9. MONETISATION — AFTER REPEAT USE IS PROVEN
+
+Always free:
+- Daily challenge.
+- Mate in 1/2/3 practice.
+- Basic bot play.
+- Local progress.
+
+Possible paid features:
+- Structured checkmate courses.
+- Advanced progress and mistake review.
+- Optional cross-device sync.
+- More specialised “finish the position” packs.
+
+Do not add payment to the initial build. First establish that users enjoy
+the game and return regularly; installs alone do not prove demand.
+
+10. SUCCESS CRITERIA FOR THE FIRST RELEASE
+
+- A new user can start a puzzle in one click without signing up.
+- Every puzzle can be completed through legal board moves.
+- Closing and reopening never loses the current puzzle or game.
+- The popup board is usable without scrolling horizontally.
+- The extension works offline.
+- A meaningful share of beta users returns to play again during the
+  following week.
+
+PRODUCT DIRECTION
+
+Build “a chess game for a five-minute break,” centred on Mate in 1 → 2 → 3
+and Finish the Position. Its advantage should be instant play, clear
+teaching, and reliable progress—not a long feature list.

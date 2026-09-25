@@ -1,0 +1,90 @@
+[
+  {
+    "id": "kq-k",
+    "title": "Queen vs lone king",
+    "fen": "8/8/8/4k3/8/8/8/3QK3 w - - 0 1",
+    "tier": "easy",
+    "goal": "Checkmate with king and queen.",
+    "tip": "Use the queen to shrink the king's box a knight's move away, then bring your own king up. Watch out for stalemate!"
+  },
+  {
+    "id": "rr-k",
+    "title": "Two-rook ladder",
+    "fen": "8/8/8/3k4/8/8/8/R3K2R w - - 0 1",
+    "tier": "easy",
+    "goal": "Checkmate with the two rooks.",
+    "tip": "Rooks take turns: one cuts off a rank, the other checks. Walk the king to the edge like climbing a ladder."
+  },
+  {
+    "id": "kq-k-black",
+    "title": "Queen vs king (as Black)",
+    "fen": "3qk3/8/8/8/4K3/8/8/8 b - - 0 1",
+    "tier": "easy",
+    "goal": "Checkmate with king and queen — this time with Black.",
+    "tip": "Same technique from the other side: box the king in, then march your king closer."
+  },
+  {
+    "id": "kr-k",
+    "title": "Rook vs lone king",
+    "fen": "8/8/8/4k3/8/8/8/R3K3 w - - 0 1",
+    "tier": "medium",
+    "goal": "Checkmate with king and rook.",
+    "tip": "The rook cuts the king off; your king must help. Use 'opposition' — kings facing each other — then check."
+  },
+  {
+    "id": "kp-k",
+    "title": "Promote the pawn",
+    "fen": "4k3/8/4K3/4P3/8/8/8/8 w - - 0 1",
+    "tier": "medium",
+    "goal": "Promote the pawn and then checkmate.",
+    "tip": "Your king is already in front of the pawn on the 6th rank — that's a winning setup. Keep the opposition and escort the pawn home."
+  },
+  {
+    "id": "extra-rook",
+    "title": "Up a rook",
+    "fen": "6k1/5pp1/7p/8/8/7P/5PP1/3R2K1 w - - 0 1",
+    "tier": "medium",
+    "goal": "Convert the extra rook into a win.",
+    "tip": "Activate the rook (7th rank!), bring the king in, and create a passed pawn. Don't rush — just avoid blunders."
+  },
+  {
+    "id": "extra-queen",
+    "title": "Up a queen, early game",
+    "fen": "rnb1kbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 3",
+    "tier": "medium",
+    "goal": "You're a queen up after the opening. Win the game.",
+    "tip": "Develop your pieces, castle, and trade pieces when you can — every trade makes your extra queen stronger."
+  },
+  {
+    "id": "q-vs-p",
+    "title": "Queen vs a runaway pawn",
+    "fen": "8/8/8/8/8/1K6/3pk3/7Q w - - 0 1",
+    "tier": "hard",
+    "goal": "Stop the pawn and checkmate.",
+    "tip": "Check the king so it has to stand in front of its own pawn, then use that tempo to bring your king closer. Repeat."
+  },
+  {
+    "id": "back-rank",
+    "title": "Exploit the back rank",
+    "fen": "3r2k1/5ppp/8/8/8/2Q5/5PPP/4R1K1 w - - 0 1",
+    "tier": "medium",
+    "goal": "Queen and rook against a lone rook — finish it.",
+    "tip": "Black's king has no escape square. Look for checks on the back rank — and keep your own king safe."
+  },
+  {
+    "id": "lucena",
+    "title": "Lucena position",
+    "fen": "1K1k4/1P6/8/8/8/8/r7/2R5 w - - 0 1",
+    "tier": "hard",
+    "goal": "Promote the pawn and win the rook endgame.",
+    "tip": "'Build a bridge': bring the rook to the 4th rank, walk the king out, and block the checks with the rook."
+  },
+  {
+    "id": "attack",
+    "title": "Finish the attack",
+    "fen": "r4rk1/pp3ppp/2p5/3pP1Q1/3P4/2PB4/P4PPP/R4RK1 w - - 0 1",
+    "tier": "hard",
+    "goal": "Your pieces are aimed at the king. Break through.",
+    "tip": "Look for checks and captures first. Pieces pointing at h7 are a clue."
+  }
+]

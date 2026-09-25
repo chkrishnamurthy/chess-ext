@@ -1,0 +1,661 @@
+[
+ {
+  "id": "c-backrank",
+  "fen": "6k1/5ppp/8/8/8/8/5PPP/3R2K1 w - - 0 1",
+  "line": [
+   "d1d8"
+  ],
+  "n": 1,
+  "tier": "easy",
+  "rating": 500,
+  "themes": [
+   "backRankMate"
+  ],
+  "title": "Back-rank mate",
+  "note": "Black's own pawns on f7, g7 and h7 wall the king in. A rook on the 8th rank checks along the row and there is no escape square."
+ },
+ {
+  "id": "c-queen-row",
+  "fen": "k7/8/1K6/8/8/8/8/5Q2 w - - 0 1",
+  "line": [
+   "f1f8"
+  ],
+  "n": 1,
+  "tier": "easy",
+  "rating": 550,
+  "themes": [
+   "endgame"
+  ],
+  "title": "Queen and king team up",
+  "note": "Your king takes away a7 and b7; the queen checks along the 8th rank and also covers b8. Every escape square is covered."
+ },
+ {
+  "id": "c-scholar",
+  "fen": "r1bqkb1r/pppp1ppp/2n2n2/4p2Q/2B1P3/8/PPPP1PPP/RNB1K1NR w KQkq - 4 4",
+  "line": [
+   "h5f7"
+  ],
+  "n": 1,
+  "tier": "easy",
+  "rating": 600,
+  "themes": [
+   "opening"
+  ],
+  "title": "Scholar's mate",
+  "note": "f7 is Black's weakest square early on — only the king defends it. Queen takes on f7, protected by the bishop on c4, so the king cannot capture."
+ },
+ {
+  "id": "c-smothered",
+  "fen": "6rk/6pp/8/6N1/8/8/8/6K1 w - - 0 1",
+  "line": [
+   "g5f7"
+  ],
+  "n": 1,
+  "tier": "easy",
+  "rating": 650,
+  "themes": [
+   "smotheredMate"
+  ],
+  "title": "Smothered mate",
+  "note": "The black king is surrounded by its own rook and pawns. A knight check can't be blocked, and the king has nowhere to go."
+ },
+ {
+  "id": "c-arabian",
+  "fen": "7k/R7/5N2/8/8/8/8/6K1 w - - 0 1",
+  "line": [
+   "a7h7"
+  ],
+  "n": 1,
+  "tier": "easy",
+  "rating": 700,
+  "themes": [
+   "arabianMate"
+  ],
+  "title": "Arabian mate",
+  "note": "Rook and knight in the corner: the knight on f6 guards both h7 (so the king cannot take the rook) and g8."
+ },
+ {
+  "id": "c-fool",
+  "fen": "rnbqkbnr/pppp1ppp/8/4p3/6P1/5P2/PPPPP2P/RNBQKBNR b KQkq - 0 2",
+  "line": [
+   "d8h4"
+  ],
+  "n": 1,
+  "tier": "easy",
+  "rating": 600,
+  "themes": [
+   "opening"
+  ],
+  "title": "Fool's mate",
+  "note": "White weakened the e1–h4 diagonal by moving the f- and g-pawns. The queen checks from h4 and nothing can block or capture it."
+ },
+ {
+  "id": "c-black-backrank",
+  "fen": "3r2k1/5ppp/8/8/8/8/5PPP/6K1 b - - 0 1",
+  "line": [
+   "d8d1"
+  ],
+  "n": 1,
+  "tier": "easy",
+  "rating": 550,
+  "themes": [
+   "backRankMate"
+  ],
+  "title": "Back rank, Black to play",
+  "note": "Same pattern from the other side: White's king is stuck behind its pawns, so the rook drops to the 1st rank."
+ },
+ {
+  "id": "c-promote",
+  "fen": "k7/2P5/1K6/8/8/8/8/8 w - - 0 1",
+  "line": [
+   "c7c8q"
+  ],
+  "n": 1,
+  "tier": "easy",
+  "rating": 700,
+  "themes": [
+   "promotion",
+   "endgame"
+  ],
+  "title": "Promote with mate",
+  "note": "Promoting on c8 checks along the 8th rank. A queen or a rook both mate here — either answer is correct."
+ },
+ {
+  "id": "c-philidor",
+  "fen": "5r1k/6pp/7N/3Q4/8/8/8/6K1 w - - 0 1",
+  "line": [
+   "d5g8",
+   "f8g8",
+   "h6f7"
+  ],
+  "n": 2,
+  "tier": "medium",
+  "rating": 1100,
+  "themes": [
+   "smotheredMate",
+   "sacrifice",
+   "attraction"
+  ],
+  "title": "Philidor's smothered mate",
+  "note": "Give the queen on g8! The rook is forced to take (the knight covers g8 from the king), which smothers its own king — then Nf7 is mate."
+ },
+ {
+  "id": "c-king-walk",
+  "fen": "k7/8/2K5/8/8/8/8/1R6 w - - 0 1",
+  "line": [
+   "c6c7",
+   "a8a7",
+   "b1a1"
+  ],
+  "n": 2,
+  "tier": "tricky",
+  "rating": 1300,
+  "themes": [
+   "quietMove",
+   "endgame"
+  ],
+  "title": "The quiet king step",
+  "note": "No check! Kc7 just takes b7 and b8 away. Black's only move is Ka7, and then the rook mates on a1."
+ },
+ {
+  "id": "l0SMB8",
+  "fen": "3R4/p1R5/4kB2/6Kp/P5b1/7r/6r1/8 w - - 3 46",
+  "last": "f7e6",
+  "line": [
+   "c7e7"
+  ],
+  "n": 1,
+  "tier": "easy",
+  "rating": 1251,
+  "themes": [
+   "endgame",
+   "operaMate"
+  ],
+  "src": "0SMB8",
+  "title": "Opera mate"
+ },
+ {
+  "id": "l08jJr",
+  "fen": "1r1r2k1/2p3pp/2P1Np2/p1n2P2/P1P1b3/2K5/4B2P/R5R1 b - - 1 29",
+  "last": "d4e6",
+  "line": [
+   "b8b3"
+  ],
+  "n": 1,
+  "tier": "easy",
+  "rating": 1196,
+  "themes": [
+   "middlegame",
+   "pillsburysMate"
+  ],
+  "src": "08jJr",
+  "title": "Pillsbury's mate"
+ },
+ {
+  "id": "l1DZfz",
+  "fen": "7k/2p2R1p/1p2pN2/p4p2/4b3/1P6/1PPK1Pr1/8 w - - 5 33",
+  "last": "g1g2",
+  "line": [
+   "f7h7"
+  ],
+  "n": 1,
+  "tier": "easy",
+  "rating": 1129,
+  "themes": [
+   "arabianMate",
+   "endgame"
+  ],
+  "src": "1DZfz",
+  "title": "Arabian mate"
+ },
+ {
+  "id": "l0PYDl",
+  "fen": "8/1q5k/1b5p/5p2/1P3P2/1QBr3P/6P1/3R3K b - - 1 37",
+  "last": "f1d1",
+  "line": [
+   "d3h3"
+  ],
+  "n": 1,
+  "tier": "easy",
+  "rating": 1234,
+  "themes": [
+   "endgame",
+   "pillsburysMate",
+   "pin"
+  ],
+  "src": "0PYDl",
+  "title": "Pillsbury's mate"
+ },
+ {
+  "id": "l0X4NE",
+  "fen": "4k3/1pR4p/2bBP3/5p2/3K1Pp1/6P1/4r3/8 w - - 1 40",
+  "last": "h2e2",
+  "line": [
+   "c7c8"
+  ],
+  "n": 1,
+  "tier": "medium",
+  "rating": 1423,
+  "themes": [
+   "endgame",
+   "pillsburysMate"
+  ],
+  "src": "0X4NE",
+  "title": "Pillsbury's mate"
+ },
+ {
+  "id": "l0H8LG",
+  "fen": "2k1r3/ppp2ppp/b7/3N4/P2P1b2/1B2rP2/1PPK2PP/R2R4 b - - 0 21",
+  "last": "c3d5",
+  "line": [
+   "e3d3"
+  ],
+  "n": 1,
+  "tier": "medium",
+  "rating": 2054,
+  "themes": [
+   "doubleCheck",
+   "middlegame",
+   "operaMate",
+   "pillsburysMate"
+  ],
+  "src": "0H8LG",
+  "title": "Opera mate"
+ },
+ {
+  "id": "l0k7TZ",
+  "fen": "8/pp3R2/6kp/1P5N/n5P1/8/2rr3P/5RK1 w - - 1 31",
+  "last": "d3d2",
+  "line": [
+   "f7g7"
+  ],
+  "n": 1,
+  "tier": "medium",
+  "rating": 1820,
+  "themes": [
+   "endgame",
+   "hookMate"
+  ],
+  "src": "0k7TZ",
+  "title": "Hook mate"
+ },
+ {
+  "id": "l0Nwlm",
+  "fen": "4r2k/3p1p2/p1b2R1p/1pQ5/8/1B4rP/PP3PP1/6K1 b - - 0 29",
+  "last": "d6f6",
+  "line": [
+   "e8e1",
+   "g1h2",
+   "g3g2"
+  ],
+  "n": 2,
+  "tier": "medium",
+  "rating": 1401,
+  "themes": [
+   "endgame",
+   "operaMate"
+  ],
+  "src": "0Nwlm",
+  "title": "Opera mate"
+ },
+ {
+  "id": "l0VwT4",
+  "fen": "4brk1/7p/p2Qp1p1/3p4/3q4/7R/PPP1B1PP/7K b - - 2 29",
+  "last": "g1h1",
+  "line": [
+   "d4d1",
+   "e2d1",
+   "f8f1"
+  ],
+  "n": 2,
+  "tier": "medium",
+  "rating": 1439,
+  "themes": [
+   "backRankMate",
+   "endgame",
+   "sacrifice"
+  ],
+  "src": "0VwT4",
+  "title": "Back-rank mate"
+ },
+ {
+  "id": "l1M0ex",
+  "fen": "1r4nr/3N1pkp/2B1p1p1/8/Pp3N2/3P2P1/1bPQKP1P/q7 w - - 3 24",
+  "last": "f8g7",
+  "line": [
+   "f4h5",
+   "g6h5",
+   "d2g5"
+  ],
+  "n": 2,
+  "tier": "medium",
+  "rating": 1525,
+  "themes": [
+   "clearance",
+   "epauletteMate",
+   "middlegame",
+   "sacrifice"
+  ],
+  "src": "1M0ex",
+  "title": "Sacrifice to mate"
+ },
+ {
+  "id": "l0pxxY",
+  "fen": "3r3r/pp1P2k1/2pQ1p2/P7/8/4q1P1/1P1R2PP/3R3K b - - 5 35",
+  "last": "g1h1",
+  "line": [
+   "h8h2",
+   "h1h2",
+   "d8h8"
+  ],
+  "n": 2,
+  "tier": "medium",
+  "rating": 1383,
+  "themes": [
+   "attraction",
+   "endgame",
+   "sacrifice"
+  ],
+  "src": "0pxxY",
+  "title": "Sacrifice to mate"
+ },
+ {
+  "id": "l0Tnt5",
+  "fen": "r3Q3/1b4rk/p3p2p/1p1pP3/2pPq1P1/6K1/5PP1/7R w - - 5 35",
+  "last": "c8b7",
+  "line": [
+   "h1h6",
+   "h7h6",
+   "e8h5"
+  ],
+  "n": 2,
+  "tier": "medium",
+  "rating": 1312,
+  "themes": [
+   "attraction",
+   "endgame",
+   "sacrifice"
+  ],
+  "src": "0Tnt5",
+  "title": "Sacrifice to mate"
+ },
+ {
+  "id": "l0ArJV",
+  "fen": "1r3k1r/p1b3p1/3qBB2/1p6/8/5Q2/PP3PP1/RN2R1K1 b - - 0 21",
+  "last": "g5f6",
+  "line": [
+   "h8h1",
+   "g1h1",
+   "d6h2"
+  ],
+  "n": 2,
+  "tier": "hard",
+  "rating": 1755,
+  "themes": [
+   "attraction",
+   "middlegame",
+   "sacrifice"
+  ],
+  "src": "0ArJV",
+  "title": "Sacrifice to mate"
+ },
+ {
+  "id": "l0pJPD",
+  "fen": "r1b5/4q3/p2b4/1p2p1pn/3pP1k1/3P1NP1/PP3PKR/R7 w - - 4 28",
+  "last": "f6h5",
+  "line": [
+   "f3e5",
+   "e7e5",
+   "f2f3"
+  ],
+  "n": 2,
+  "tier": "hard",
+  "rating": 2033,
+  "themes": [
+   "middlegame",
+   "sacrifice"
+  ],
+  "src": "0pJPD",
+  "title": "Sacrifice to mate"
+ },
+ {
+  "id": "l0r3Pt",
+  "fen": "1r5k/2q3pp/8/2PQ4/5P2/Pr2PP2/K5RP/2R5 b - - 0 34",
+  "last": "b2a3",
+  "line": [
+   "b3a3",
+   "a2a3",
+   "c7a5"
+  ],
+  "n": 2,
+  "tier": "hard",
+  "rating": 1651,
+  "themes": [
+   "attraction",
+   "endgame",
+   "sacrifice"
+  ],
+  "src": "0r3Pt",
+  "title": "Sacrifice to mate"
+ },
+ {
+  "id": "l17zHs",
+  "fen": "rr6/p3p2k/3pNpp1/1pp5/2q1P3/5R2/P2Q2PP/6K1 w - - 0 27",
+  "last": "a4c4",
+  "line": [
+   "d2h6",
+   "h7h6",
+   "f3h3"
+  ],
+  "n": 2,
+  "tier": "tricky",
+  "rating": 2083,
+  "themes": [
+   "anastasiaMate",
+   "attraction",
+   "endgame",
+   "sacrifice"
+  ],
+  "src": "17zHs",
+  "title": "Anastasia's mate"
+ },
+ {
+  "id": "l1aQm0",
+  "fen": "5rk1/pp1rRppp/1np5/5Q2/7P/P7/B2q1PP1/R5K1 w - - 2 19",
+  "last": "d8d7",
+  "line": [
+   "f5f7",
+   "f8f7",
+   "e7e8"
+  ],
+  "n": 2,
+  "tier": "tricky",
+  "rating": 1804,
+  "themes": [
+   "kingsideAttack",
+   "middlegame",
+   "pin",
+   "sacrifice"
+  ],
+  "src": "1aQm0",
+  "title": "Sacrifice to mate"
+ },
+ {
+  "id": "l0WkPG",
+  "fen": "r1b2rk1/pp1p1ppp/2p5/8/2B4q/5Q2/PPP2nPP/RN2R1K1 w - - 0 13",
+  "last": "e4f2",
+  "line": [
+   "f3f7",
+   "f8f7",
+   "e1e8"
+  ],
+  "n": 2,
+  "tier": "tricky",
+  "rating": 1818,
+  "themes": [
+   "kingsideAttack",
+   "middlegame",
+   "pin",
+   "sacrifice"
+  ],
+  "src": "0WkPG",
+  "title": "Sacrifice to mate"
+ },
+ {
+  "id": "l1FhTV",
+  "fen": "2r3k1/pbqn1Npn/1p5p/2ppN3/3P4/2P3P1/PPQ2PP1/4R1K1 w - - 0 22",
+  "last": "f6h7",
+  "line": [
+   "f7h6",
+   "g7h6",
+   "c2g6",
+   "g8h8",
+   "e5f7"
+  ],
+  "n": 3,
+  "tier": "hard",
+  "rating": 1349,
+  "themes": [
+   "cornerMate",
+   "kingsideAttack",
+   "middlegame",
+   "sacrifice"
+  ],
+  "src": "1FhTV",
+  "title": "Sacrifice to mate"
+ },
+ {
+  "id": "l0GekT",
+  "fen": "1knr3r/p1p2p2/Qp1p4/3P4/3qP1p1/2R3P1/PPRN2KP/8 b - - 8 28",
+  "last": "c1c2",
+  "line": [
+   "h8h2",
+   "g2h2",
+   "d4f2",
+   "h2h1",
+   "d8h8"
+  ],
+  "n": 3,
+  "tier": "hard",
+  "rating": 1344,
+  "themes": [
+   "attraction",
+   "middlegame",
+   "sacrifice"
+  ],
+  "src": "0GekT",
+  "title": "Sacrifice to mate"
+ },
+ {
+  "id": "l0Snoe",
+  "fen": "r5k1/p2bQ1pp/2p5/1p1p4/3P2q1/3B4/PP5P/1K3R2 w - - 2 22",
+  "last": "g2g4",
+  "line": [
+   "e7f7",
+   "g8h8",
+   "f7f8",
+   "a8f8",
+   "f1f8"
+  ],
+  "n": 3,
+  "tier": "hard",
+  "rating": 1440,
+  "themes": [
+   "endgame",
+   "sacrifice"
+  ],
+  "src": "0Snoe",
+  "title": "Sacrifice to mate"
+ },
+ {
+  "id": "l0MaZV",
+  "fen": "4r1k1/1p2rppp/2p5/p7/2Pq4/1P3Q2/1P4PP/4RR1K w - - 2 22",
+  "last": "a8e8",
+  "line": [
+   "f3f7",
+   "e7f7",
+   "e1e8",
+   "f7f8",
+   "f1f8"
+  ],
+  "n": 3,
+  "tier": "hard",
+  "rating": 1426,
+  "themes": [
+   "deflection",
+   "endgame",
+   "sacrifice"
+  ],
+  "src": "0MaZV",
+  "title": "Sacrifice to mate"
+ },
+ {
+  "id": "l1RT0X",
+  "fen": "2kr1b1r/pppb1ppp/3q4/1B2P3/4Q3/P7/1PP2PPP/R1B1K2R b KQ - 0 11",
+  "last": "d4e5",
+  "line": [
+   "d6d1",
+   "e1d1",
+   "d7g4",
+   "d1e1",
+   "d8d1"
+  ],
+  "n": 3,
+  "tier": "tricky",
+  "rating": 1909,
+  "themes": [
+   "attraction",
+   "doubleCheck",
+   "middlegame",
+   "operaMate",
+   "sacrifice"
+  ],
+  "src": "1RT0X",
+  "title": "Opera mate"
+ },
+ {
+  "id": "l0xim3",
+  "fen": "r6k/pQ3rpp/1np3q1/8/8/1B3P1P/PP2n1P1/3R3K w - - 0 25",
+  "last": "f8f7",
+  "line": [
+   "b7a8",
+   "b6a8",
+   "d1d8",
+   "f7f8",
+   "d8f8"
+  ],
+  "n": 3,
+  "tier": "tricky",
+  "rating": 1784,
+  "themes": [
+   "backRankMate",
+   "fork",
+   "middlegame",
+   "sacrifice"
+  ],
+  "src": "0xim3",
+  "title": "Back-rank mate"
+ },
+ {
+  "id": "l0zH5q",
+  "fen": "6rk/pp3Qpp/4P3/6R1/8/1q5P/2r3P1/5RK1 w - - 0 30",
+  "last": "a2b3",
+  "line": [
+   "f7g7",
+   "g8g7",
+   "f1f8",
+   "g7g8",
+   "g5g8"
+  ],
+  "n": 3,
+  "tier": "tricky",
+  "rating": 1845,
+  "themes": [
+   "clearance",
+   "endgame",
+   "sacrifice"
+  ],
+  "src": "0zH5q",
+  "title": "Sacrifice to mate"
+ }
+]

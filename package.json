@@ -1,0 +1,33 @@
+{
+  "name": "chess-break",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Chess Break — a chess trainer & game for short breaks. Chrome extension, offline, no account.",
+  "license": "GPL-3.0-or-later",
+  "type": "module",
+  "scripts": {
+    "dev": "vite build --watch",
+    "build": "npm run verify-puzzles && tsc --noEmit && vite build",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "verify-puzzles": "node --import tsx scripts/verify-puzzles.ts",
+    "lichess-import": "node --import tsx scripts/lichess-import.ts",
+    "build-curated": "node --import tsx scripts/build-curated.ts",
+    "verify-positions": "node --import tsx scripts/verify-positions.ts",
+    "icons": "node --import tsx scripts/make-icons.ts"
+  },
+  "dependencies": {
+    "@lichess-org/chessground": "^10.2.0",
+    "chess.js": "^1.4.0",
+    "chessops": "^0.15.1",
+    "stockfish": "^19.0.0"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.3.0",
+    "@types/node": "^26.6.2",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vite": "^8.3.1",
+    "vitest": "^5.0.2"
+  }
+}
