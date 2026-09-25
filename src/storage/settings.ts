@@ -1,7 +1,7 @@
 import { KEYS, load, onChange, save } from './store';
 
 export type BoardTheme = 'wood' | 'green' | 'blue' | 'grey' | 'contrast' | 'slate';
-export type PieceSet = 'standard' | 'large' | 'minimal';
+export type PieceSet = 'standard' | 'flat' | 'outline' | 'large';
 
 export interface Settings {
   boardTheme: BoardTheme;

@@ -128,10 +128,18 @@ export function explain(p: Puzzle, played: string[], verbose: boolean): Explanat
   if (p.n > 1 && played.length > 1) {
     const defender = side(chess.fen());
     const replay = new Chess(p.fen);
-    const defSans = played.map((u) => playUci(replay, u)?.san ?? '').filter((_, i) => i % 2 === 1);
-    defence = verbose
-      ? `${defender}'s most stubborn defence was ${defSans.join(', then ')} — every other reply allows mate even sooner.`
-      : `Best defence: ${defSans.join(', ')}.`;
+    const defSans: string[] = [];
+    let allForced = true;
+    played.forEach((u, i) => {
+      if (i % 2 === 1 && replay.moves().length > 1) allForced = false;
+      const san = playUci(replay, u)?.san ?? '';
+      if (i % 2 === 1) defSans.push(san);
+    });
+    if (allForced) defence = `${defSans.join(', then ')} was forced — ${defender} had no other legal move.`;
+    else
+      defence = verbose
+        ? `${defender}'s most stubborn defence was ${defSans.join(', then ')} — every other reply allows mate even sooner.`
+        : `Best defence: ${defSans.join(', ')}.`;
   }
   return { title, idea: verbose ? idea : idea.split('. ')[0].replace(/\.?$/, '.'), line, defence };
 }

@@ -7,14 +7,17 @@
   "type": "module",
   "scripts": {
     "dev": "vite build --watch",
-    "build": "npm run verify-puzzles && tsc --noEmit && vite build",
-    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
     "test": "vitest run",
+    "typecheck": "tsc --noEmit",
     "verify-puzzles": "node --import tsx scripts/verify-puzzles.ts",
+    "verify-positions": "node --import tsx scripts/verify-positions.ts",
     "lichess-import": "node --import tsx scripts/lichess-import.ts",
     "build-curated": "node --import tsx scripts/build-curated.ts",
-    "verify-positions": "node --import tsx scripts/verify-positions.ts",
-    "icons": "node --import tsx scripts/make-icons.ts"
+    "icons": "node --import tsx scripts/make-icons.ts",
+    "release": "npm run verify-puzzles && npm test && npm run build && cd dist && rm -f ../chess-break.zip && zip -qr ../chess-break.zip . && echo \"packaged chess-break.zip\"",
+    "engine": "cp node_modules/stockfish/bin/stockfish-19-lite-single.js public/engine/stockfish.js && cp node_modules/stockfish/bin/stockfish-19-lite-single.wasm public/engine/stockfish.wasm && cp node_modules/stockfish/Copying.txt public/engine/COPYING.txt"
   },
   "dependencies": {
     "@lichess-org/chessground": "^10.2.0",

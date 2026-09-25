@@ -18,6 +18,10 @@ export interface PuzzleState {
   hintLevel: 0 | 1 | 2 | 3;
   /** The move the current hints are about (kept stable across hint levels). */
   hintMove?: string;
+  /** Set once the result has been written to progress (so a resume never double-counts). */
+  recorded?: boolean;
+  /** Highest hint level used (level 3 = the move was shown, so it doesn't count as first try). */
+  maxHint?: number;
 }
 
 export type MoveVerdict =
@@ -37,9 +41,19 @@ export class PuzzleSession {
 
   /** Current position (after all played moves). */
   fen(): string {
+    return this.fenAt(this.state.played.length);
+  }
+
+  /** Position after the first `ply` played moves. */
+  fenAt(ply: number): string {
     const c = new Chess(this.puzzle.fen);
-    for (const u of this.state.played) playUci(c, u);
+    for (const u of this.state.played.slice(0, ply)) playUci(c, u);
     return c.fen();
+  }
+
+  /** Solved on the first attempt, without being shown the move. */
+  firstTry(): boolean {
+    return this.state.status === 'solved' && this.state.mistakes === 0 && (this.state.maxHint ?? 0) < 3;
   }
 
   lastMove(): string | undefined {
@@ -132,6 +146,7 @@ export class PuzzleSession {
     this.state.hintMove = move;
     const level = (instant ? 3 : Math.min(3, this.state.hintLevel + 1)) as 1 | 2 | 3;
     this.state.hintLevel = level;
+    this.state.maxHint = Math.max(this.state.maxHint ?? 0, level);
     return { level, move };
   }
 

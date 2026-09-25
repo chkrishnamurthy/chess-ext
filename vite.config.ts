@@ -1,3 +1,4 @@
+/// <reference types="vitest/config" />
 import { defineConfig } from 'vite';
 import { resolve } from 'node:path';
 
@@ -5,21 +6,20 @@ import { resolve } from 'node:path';
 export default defineConfig({
   base: './',
   publicDir: 'public',
+  // The puzzle library is large; JSON.parse on a string loads faster than a JS object literal.
+  json: { stringify: true },
   build: {
     outDir: 'dist',
     emptyOutDir: true,
     target: 'chrome116',
-    // Keep the WASM engine out of the inline-asset path; it is copied from public/.
+    // Stockfish (JS + WASM) is copied verbatim from public/engine — never inlined or fetched remotely.
     assetsInlineLimit: 0,
+    chunkSizeWarningLimit: 1200,
     rollupOptions: {
       input: {
-        popup: resolve(__dirname, 'popup.html'),
-        sidepanel: resolve(__dirname, 'sidepanel.html'),
-        options: resolve(__dirname, 'options.html'),
-        background: resolve(__dirname, 'src/background.ts'),
-      },
-      output: {
-        entryFileNames: (chunk) => (chunk.name === 'background' ? 'background.js' : 'assets/[name]-[hash].js'),
+        popup: resolve(import.meta.dirname, 'popup.html'),
+        sidepanel: resolve(import.meta.dirname, 'sidepanel.html'),
+        options: resolve(import.meta.dirname, 'options.html'),
       },
     },
   },

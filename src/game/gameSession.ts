@@ -18,6 +18,7 @@ export interface GameState {
   level: BotLevel;
   result?: GameResult;
   startedAt: number;
+  recorded?: boolean;
 }
 
 export function newGameState(positionId: string, fen: string, level: BotLevel): GameState {
