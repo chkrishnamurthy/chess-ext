@@ -20,6 +20,8 @@ export interface Ctx {
   go(route: Route): void;
   saveProgress(): Promise<void>;
   today(): string;
+  /** Focus mode: hide the tab bar so the board + controls fit without scrolling. */
+  focus(on: boolean): void;
   /** Refresh the top bar (streak, sound icon). */
   refreshChrome(): void;
 }

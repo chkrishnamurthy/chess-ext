@@ -3,10 +3,11 @@ import type { MateN } from '../../game/types';
 import { accuracy, BADGES, liveStreak, weeklyGrowth } from '../../progress/progress';
 import { exportData, importData, resetData } from '../../storage/backup';
 import { h, toast } from '../../ui/dom';
+import { screenHeader } from '../kit';
 import { openOptions } from '../nav';
 import type { Screen } from '../context';
 
-const stat = (v: string | number, k: string) => h('div.stat', null, h('div.v', null, String(v)), h('div.k', null, k));
+const stat = (v: string | number, k: string, cls = '') => h('div.stat', { class: cls }, h('div.v', null, String(v)), h('div.k', null, k));
 
 export const progressScreen: Screen = (ctx, root) => {
   const p = ctx.progress;
@@ -50,18 +51,18 @@ export const progressScreen: Screen = (ctx, root) => {
       h(
         'div',
         { style: 'flex:1;display:flex;flex-direction:column;align-items:center;gap:2px', title: `${c.n} solved` },
-        h('div', { style: `width:100%;background:var(--accent);border-radius:4px 4px 0 0;height:${Math.round((30 * c.n) / max)}px;min-height:${c.n ? 3 : 0}px` }),
+        h('div', { style: `width:100%;background:var(--brand);border-radius:6px 6px 2px 2px;height:${Math.round((30 * c.n) / max)}px;min-height:${c.n ? 3 : 0}px` }),
         h('span', { style: 'font-size:.75em;color:var(--muted)' }, c.d),
       ),
     );
   }
 
   root.append(
-    h('h2', { style: 'margin:0' }, 'Your progress'),
+    screenHeader(ctx, 'Your progress', 'You vs you — every puzzle counts'),
     h(
       'div.grid-2',
       null,
-      stat(`🔥 ${streak}`, `day streak · best ${p.streak.best}${ctx.settings.streakFreeze ? ` · ${p.streak.freezes ? '🧊 freeze ready' : 'no freeze'}` : ''}`),
+      stat(`🔥 ${streak}`, `day streak · best ${p.streak.best}${ctx.settings.streakFreeze ? ` · ${p.streak.freezes ? '🧊 freeze ready' : 'no freeze'}` : ''}`, 'accent'),
       stat(total, 'puzzles solved'),
       stat(`${accuracy(p)}%`, 'first-try accuracy'),
       stat(`⚡ ${p.rushBest}`, 'Puzzle Rush best'),

@@ -3,6 +3,8 @@ import { newPuzzleState, PuzzleSession, type PuzzleState } from '../../game/puzz
 import { recordPuzzle, recordRush } from '../../progress/progress';
 import { KEYS, load, save } from '../../storage/store';
 import { clear, h, toast } from '../../ui/dom';
+import { icon } from '../../ui/icons';
+import { celebrate, screenHeader, toolBtn } from '../kit';
 import { play } from '../../ui/sound';
 import type { Screen } from '../context';
 import { PuzzleView } from '../puzzleView';
@@ -44,13 +46,28 @@ export const rushScreen: Screen = async (ctx, root) => {
   if (run.status === 'running') run.status = 'paused';
 
   const timerEl = h('span.rush-timer');
-  const scoreEl = h('span');
+  const scoreEl = h('span.rush-score');
   const strikesEl = h('span.strikes', { 'aria-label': 'Strikes' });
   const bar = h('div.rush-bar', null, timerEl, scoreEl, strikesEl);
-  const boardHost = h('div');
-  const controls = h('div.btn-row');
+  const boardHost = h('div.board-card');
+  const controls = h('div');
   const overlay = h('div');
-  root.append(bar, boardHost, h('div'), controls, overlay);
+  const intro = h(
+    'div.rush-intro',
+    null,
+    h('div.big-icon', null, icon('zap', 30)),
+    h('h2', null, 'Puzzle Rush'),
+    h('p', null, 'Solve as many checkmates as you can. They start easy and get harder.'),
+    h(
+      'div.rush-rules',
+      null,
+      h('span', null, '⏱ 3:00'),
+      h('span', null, '✕ 3 strikes'),
+      h('span', null, `🏆 Best ${ctx.progress.rushBest}`),
+    ),
+    h('button.hero-cta', { onclick: () => begin() }, 'Start the clock', icon('play', 15)),
+  );
+  root.append(screenHeader(ctx, 'Puzzle Rush', '3 minutes · 3 strikes'), intro, bar, boardHost, controls, overlay);
 
   let session: PuzzleSession | undefined;
   let tick: number | undefined;
@@ -73,17 +90,29 @@ export const rushScreen: Screen = async (ctx, root) => {
   view.rush = true;
   boardHost.after(view.feedback);
 
+  /** The intro card replaces the board until the run starts (no peeking at puzzle #1). */
+  function renderStage() {
+    const ready = run!.status === 'ready';
+    ctx.focus(!ready);
+    intro.hidden = !ready;
+    bar.hidden = ready;
+    boardHost.hidden = ready;
+    view.feedback.hidden = ready;
+  }
+
   function persist() {
     if (session) run!.current = session.state;
     void save(KEYS.rush, run);
   }
 
   function renderBar() {
-    timerEl.textContent = `⏱ ${fmt(run!.remainingMs)}`;
+    clear(timerEl);
+    timerEl.append(icon('zap', 18), fmt(run!.remainingMs));
     timerEl.classList.toggle('low', run!.remainingMs < 20000);
-    scoreEl.textContent = `Score ${run!.score}`;
+    clear(scoreEl);
+    scoreEl.append(h('b', null, String(run!.score)), h('span', null, 'solved'));
     clear(strikesEl);
-    for (let i = 0; i < MAX_STRIKES; i++) strikesEl.append(h('span', { class: i < run!.strikes ? 'on' : '' }, '✕'));
+    for (let i = 0; i < MAX_STRIKES; i++) strikesEl.append(h('span', { class: i < run!.strikes ? 'on' : '' }, icon('x', 13)));
   }
 
   function loadPuzzle() {
@@ -132,16 +161,26 @@ export const rushScreen: Screen = async (ctx, root) => {
   }
 
   function renderControls() {
+    renderStage();
     clear(controls);
-    if (run!.status === 'ready') {
-      controls.append(h('button.btn.primary', { onclick: () => begin() }, '⚡ Start — 3:00'));
-    } else if (run!.status === 'paused') {
-      controls.append(h('button.btn.primary', { onclick: () => begin() }, '▶ Resume'), h('button.btn', { onclick: () => restart() }, 'New run'));
+    if (run!.status === 'paused') {
+      controls.append(
+        h(
+          'div.btn-row',
+          null,
+          h('button.btn.primary', { onclick: () => begin() }, icon('play', 16), 'Resume'),
+          h('button.btn', { onclick: () => restart() }, icon('reset', 16), 'New run'),
+        ),
+      );
     } else if (run!.status === 'running') {
       controls.append(
-        h('button.btn', { onclick: () => pause() }, '⏸ Pause'),
-        h('button.btn', { onclick: () => view.board.flip(), 'aria-label': 'Flip board' }, '⇅'),
-        h('button.btn.ghost', { onclick: () => end() }, 'End run'),
+        h(
+          'div.toolbar',
+          null,
+          toolBtn('pause', 'Pause', () => pause()),
+          toolBtn('flip', 'Flip', () => view.board.flip(), { 'aria-label': 'Flip board' }),
+          toolBtn('flag', 'End run', () => void end()),
+        ),
       );
     }
   }
@@ -205,21 +244,38 @@ export const rushScreen: Screen = async (ctx, root) => {
     clear(overlay);
     const p = ctx.progress;
     const todayBest = p.days[ctx.today()]?.rush ?? run!.score;
+    const r = run!;
     overlay.append(
       h(
-        'div.card',
+        'div.result-sheet',
         null,
-        h('div.big-score.pop', null, String(run!.score)),
-        h('p', { style: 'text-align:center' }, run!.newBest ? '🏆 New personal best!' : `Today’s best: ${todayBest} · All-time best: ${p.rushBest}`),
-        run!.missed.length ? h('p', null, `🔁 ${run!.missed.length} missed puzzle${run!.missed.length === 1 ? ' was' : 's were'} added to “Retry mistakes”.`) : run!.score > 0 ? h('p', null, 'No strikes — flawless!') : h('p', null, 'Ended early — give it a full three minutes next time!'),
+        h(
+          'div.result-head',
+          null,
+          h('div.result-badge', { class: r.newBest ? '' : 'neutral' }, r.newBest ? '🏆' : '⚡'),
+          h(
+            'div',
+            null,
+            h('h2', null, r.newBest ? 'New personal best!' : r.remainingMs <= 0 ? 'Time’s up!' : 'Run over'),
+            h('p', null, `Today’s best ${todayBest} · All-time best ${p.rushBest}`),
+          ),
+        ),
+        h('div.big-score.pop', null, String(r.score)),
+        h('p', { style: 'text-align:center;color:var(--muted)' }, r.score === 1 ? 'puzzle solved' : 'puzzles solved'),
+        r.missed.length
+          ? h('p', { style: 'color:var(--muted)' }, `🔁 ${r.missed.length} missed puzzle${r.missed.length === 1 ? ' was' : 's were'} added to “Retry mistakes”.`)
+          : r.score > 0
+            ? h('p', { style: 'color:var(--muted)' }, 'No strikes — flawless! ✨')
+            : h('p', { style: 'color:var(--muted)' }, 'Ended early — give it the full three minutes next time!'),
         h(
           'div.btn-row',
           null,
-          h('button.btn.primary', { onclick: () => { restart(); begin(); } }, '⚡ Play again'),
-          h('button.btn', { onclick: () => ctx.go({ name: 'home' }) }, 'Home'),
+          h('button.btn.primary', { onclick: () => { restart(); begin(); } }, icon('zap', 16), 'Play again'),
+          h('button.btn', { onclick: () => ctx.go({ name: 'home' }) }, icon('home', 16), 'Home'),
         ),
       ),
     );
+    if (r.newBest) celebrate();
   }
 
   renderBar();

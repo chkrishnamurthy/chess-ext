@@ -5,6 +5,8 @@ import type { Puzzle, Tier } from '../../game/types';
 import { liveStreak, recordPuzzle } from '../../progress/progress';
 import { KEYS, load, save } from '../../storage/store';
 import { clear, h, toast } from '../../ui/dom';
+import { icon } from '../../ui/icons';
+import { celebrate, screenHeader, toolBtn } from '../kit';
 import type { Ctx, Route, Screen } from '../context';
 import { PuzzleView } from '../puzzleView';
 
@@ -53,14 +55,14 @@ export const puzzleScreen: Screen = async (ctx, root, r) => {
     state = newPuzzleState(puzzle, route.mode);
   }
 
-  const header = h('div.objective');
-  const tierBar = h('div.seg', { role: 'group', 'aria-label': 'Difficulty' });
-  const boardHost = h('div');
-  const controls = h('div.btn-row');
+  const header = h('div');
+  const tierSelect = h('select.tier-select', { 'aria-label': 'Difficulty' });
+  const boardHost = h('div.board-card');
+  const controls = h('div');
   const after = h('div');
   const view = new PuzzleView(boardHost, () => ctx.settings, {
     onChange: () => void save(KEYS.puzzle, session.state),
-    onSolved: () => void finish(),
+    onSolved: () => void finish(true),
   });
   let session = new PuzzleSession(puzzle, state!);
 
@@ -69,89 +71,116 @@ export const puzzleScreen: Screen = async (ctx, root, r) => {
     const available = TIERS.filter((t) => allPuzzles().some((p) => p.n === n && p.tier === t));
     const current = route.tier ?? 'all';
     for (const t of ['all', ...available] as (Tier | 'all')[]) {
-      tierBar.append(
-        h(
-          'button',
-          {
-            'aria-pressed': String(current === t),
-            onclick: () => {
-              if (t !== current) ctx.go({ name: 'puzzle', mode: 'practice', n, tier: t });
-            },
-          },
-          t === 'all' ? 'All' : TIER_LABEL[t],
-        ),
-      );
+      tierSelect.append(h('option', { value: t, selected: current === t }, t === 'all' ? 'All levels' : TIER_LABEL[t]));
     }
+    tierSelect.addEventListener('change', () => ctx.go({ name: 'puzzle', mode: 'practice', n, tier: tierSelect.value as Tier | 'all' }));
   }
 
-  root.append(header, route.mode === 'practice' ? tierBar : '', boardHost, view.feedback, controls, after);
+  ctx.focus(true);
+  root.append(header, boardHost, view.feedback, controls, after);
 
   function renderHeader() {
     const p = session.puzzle;
     const color = session.solverColor();
+    const title = route.mode === 'daily' ? 'Today’s challenge' : route.mode === 'retry' ? 'Retry a mistake' : `Mate in ${p.n}`;
     clear(header);
     header.append(
-      h('span.turn-dot', { class: color }),
-      h('strong', null, `${color === 'white' ? 'White' : 'Black'} to move — Mate in ${p.n}`),
-      h('span.chip', { class: p.tier }, TIER_LABEL[p.tier]),
-      route.mode === 'daily' ? h('span.chip', null, '📅 Daily') : '',
-      route.mode === 'retry' ? h('span.chip', null, '🔁 Retry') : '',
+      screenHeader(
+        ctx,
+        title,
+        h(
+          'span',
+          { style: 'display:contents' },
+          h('span.turn-pill', null, h('span.turn-dot', { class: color }), `${color === 'white' ? 'White' : 'Black'} to move`),
+          h('span.chip', { class: p.tier }, TIER_LABEL[p.tier]),
+          route.mode === 'practice' ? '' : `Mate in ${p.n}`,
+        ),
+        route.mode === 'practice' ? tierSelect : undefined,
+      ),
     );
   }
 
   function renderControls() {
     clear(controls);
-    const playing = session.state.status === 'playing';
-    if (playing) {
-      controls.append(
-        h('button.btn', { onclick: () => view.hint(), title: 'Reveal a hint, step by step' }, '💡 Hint'),
-        h('button.btn', { onclick: () => view.reset(), title: 'Back to the start position' }, '↺ Reset'),
-        h('button.btn', { onclick: () => view.board.flip(), title: 'Flip board', 'aria-label': 'Flip board' }, '⇅'),
-        h('button.btn.ghost', { onclick: () => { view.reveal(); void finish(); } }, 'Show solution'),
-      );
-    } else {
-      controls.append(
-        h('button.btn.primary', { onclick: () => next() }, route.mode === 'daily' ? 'Practice more' : 'Next puzzle →'),
-        h('button.btn', { onclick: () => { session.state.status = 'playing'; view.reset(); renderControls(); clear(after); } }, '↺ Try again'),
-      );
-    }
+    if (session.state.status !== 'playing') return;
+    controls.append(
+      h(
+        'div.toolbar',
+        null,
+        toolBtn('bulb', 'Hint', () => view.hint(), { class: 'accent' }),
+        toolBtn('reset', 'Reset', () => view.reset()),
+        toolBtn('flip', 'Flip', () => view.board.flip(), { 'aria-label': 'Flip board' }),
+        toolBtn('eye', 'Solution', () => {
+          view.reveal();
+          void finish(false);
+        }),
+      ),
+    );
   }
 
-  function renderExplanation() {
+  function renderResult() {
     clear(after);
     const verbose = ctx.settings.coach === 'verbose';
     const ex = explain(session.puzzle, session.state.played, verbose);
     const solved = session.state.status === 'solved';
-    const card = h(
-      'div.card',
-      null,
-      solved ? h('div.solved-banner.pop', null, '✅', session.firstTry() ? 'Solved first try!' : 'Solved!') : null,
-      h('h3', null, `💡 ${ex.title}`),
-      h('p', null, ex.idea),
-      ex.defence ? h('p', null, ex.defence) : null,
-      h('p.line', null, ex.line),
-      session.puzzle.src
-        ? h('p.line', null, 'Puzzle from the Lichess database (CC0).')
-        : null,
-    );
+    const first = session.firstTry();
     const p = ctx.progress;
     const log = p.days[ctx.today()];
-    const recap = log
-      ? h(
-          'div.card.recap',
+    const streak = liveStreak(p, ctx.today(), ctx.settings.streakFreeze);
+    after.append(
+      h(
+        'div.result-sheet',
+        null,
+        h(
+          'div.result-head',
           null,
+          h('div.result-badge', { class: solved ? '' : 'neutral' }, solved ? (first ? '🏆' : '✅') : '📖'),
           h(
-            'p',
+            'div',
             null,
-            `Today: ${log.solved} solved · ${log.attempted ? Math.round((100 * log.firstTry) / log.attempted) : 0}% first try · streak ${liveStreak(p, ctx.today(), ctx.settings.streakFreeze)} 🔥`,
+            h('h2', null, solved ? (first ? 'Solved first try!' : 'Solved!') : 'Here’s how it works'),
+            h('p', null, solved ? 'Great pattern — you’ll spot it faster next time.' : 'Saved to “Retry mistakes” so you can try again later.'),
           ),
-        )
-      : null;
-    after.append(card, recap ?? '');
+        ),
+        h('div.explain-title', null, icon('bulb', 16), ex.title),
+        h('p', null, ex.idea),
+        ex.defence ? h('p', { style: 'color:var(--muted)' }, ex.defence) : '',
+        h('p.line', null, ex.line),
+        log
+          ? h(
+              'div.recap-line',
+              null,
+              h('span', null, `✅ ${log.solved} today`),
+              h('span', null, `🎯 ${log.attempted ? Math.round((100 * log.firstTry) / log.attempted) : 0}% first try`),
+              h('span', null, `🔥 ${streak}-day streak`),
+            )
+          : '',
+        h(
+          'div.btn-row',
+          null,
+          h('button.btn.primary', { onclick: () => next() }, route.mode === 'daily' ? 'Keep practising' : 'Next puzzle', icon('arrow', 16)),
+          h(
+            'button.btn',
+            {
+              onclick: () => {
+                session.state.status = 'playing';
+                view.reset();
+                renderControls();
+                clear(after);
+              },
+            },
+            icon('reset', 16),
+            'Replay',
+          ),
+        ),
+        session.puzzle.src ? h('p.src', null, 'Puzzle from the Lichess database (CC0).') : '',
+      ),
+    );
   }
 
-  async function finish() {
+  async function finish(justSolved: boolean) {
     renderControls();
+    if (justSolved) celebrate();
     if (!session.state.recorded) {
       session.state.recorded = true;
       const solved = session.state.status === 'solved';
@@ -165,7 +194,8 @@ export const puzzleScreen: Screen = async (ctx, root, r) => {
       for (const b of badges) toast(`${b.icon} Badge unlocked: ${b.name}`, 'good', 3200);
     }
     await save(KEYS.puzzle, session.state);
-    renderExplanation();
+    renderResult();
+    after.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
   function next() {
@@ -191,7 +221,7 @@ export const puzzleScreen: Screen = async (ctx, root, r) => {
   renderHeader();
   view.load(session);
   renderControls();
-  if (session.state.status !== 'playing') renderExplanation();
+  if (session.state.status !== 'playing') renderResult();
   void save(KEYS.puzzle, session.state);
 
   return {

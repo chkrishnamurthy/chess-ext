@@ -61,7 +61,7 @@ body {
 }
 .tab[aria-selected='true'] {
   color: var(--text);
-  border-bottom-color: var(--accent);
+  border-bottom-color: var(--brand);
 }
 .panel {
   display: flex;
@@ -111,7 +111,7 @@ body {
   align-items: center;
 }
 .swatch[aria-pressed='true'] {
-  border-color: var(--accent);
+  border-color: var(--brand);
 }
 .sw {
   width: 100%;
@@ -144,7 +144,7 @@ input.switch::after {
   transition: transform 0.2s;
 }
 input.switch:checked {
-  background: var(--accent);
+  background: var(--brand);
 }
 input.switch:checked::after {
   transform: translateX(18px);

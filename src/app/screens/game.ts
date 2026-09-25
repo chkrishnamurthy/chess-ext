@@ -8,6 +8,8 @@ import type { Settings } from '../../storage/settings';
 import { KEYS, load, save } from '../../storage/store';
 import { Board } from '../../ui/board';
 import { announce, clear, h, toast } from '../../ui/dom';
+import { icon } from '../../ui/icons';
+import { celebrate, miniBoard, screenHeader, toolBtn } from '../kit';
 import { play } from '../../ui/sound';
 import { openSidePanel } from '../nav';
 import type { Ctx, Route, Screen, ScreenHandle } from '../context';
@@ -55,13 +57,14 @@ function pickerView(ctx: Ctx, root: HTMLElement, level: BotLevel, setLevel: (l: 
       h(
         'button.position-item',
         { onclick: () => ctx.go({ name: 'game', positionId: p.id }) },
-        h('span.grow', null, h('strong', null, p.title), h('br'), h('span.desc', null, p.goal)),
+        miniBoard(p.fen, p.fen.split(' ')[1] === 'w' ? 'white' : 'black'),
+        h('span.grow', null, h('strong', null, p.title), h('span.desc', null, p.goal)),
         h('span.chip', { class: p.tier }, TIER_LABEL[p.tier]),
       ),
     );
   }
   root.append(
-    h('div.hero', null, h('h2', null, '♔ Finish the Position'), h('p.sub', null, 'You start from a winning position. Can you convert it against the computer?')),
+    screenHeader(ctx, 'Finish the Position', 'You’re winning — can you finish the job?'),
     h('div.section-title', null, 'Computer strength'),
     levelPicker(level, setLevel),
     h('div.section-title', null, 'Choose a position'),
@@ -72,28 +75,29 @@ function pickerView(ctx: Ctx, root: HTMLElement, level: BotLevel, setLevel: (l: 
 
 function playView(ctx: Ctx, root: HTMLElement, state: GameState): ScreenHandle {
   const game = new GameSession(state);
+  ctx.focus(true);
   const pos = POSITIONS.find((p) => p.id === state.positionId);
   const userColor = state.userColor === 'w' ? 'white' : 'black';
   let token = 0; // invalidates in-flight bot searches after undo / leaving the screen
   let reviewPly: number | null = null;
+  let celebrated = !!state.result; // only celebrate a win as it happens, not on resume
 
-  const header = h(
-    'div.objective',
-    null,
-    h('span.turn-dot', { class: userColor }),
-    h('strong', null, pos?.title ?? 'Finish the Position'),
-    pos ? h('span.chip', { class: pos.tier }, TIER_LABEL[pos.tier]) : null,
+  const header = screenHeader(
+    ctx,
+    pos?.title ?? 'Finish the Position',
+    h('span.turn-pill', null, h('span.turn-dot', { class: userColor }), `You play ${userColor === 'white' ? 'White' : 'Black'}`),
+    pos ? h('span.chip', { class: pos.tier }, TIER_LABEL[pos.tier]) : undefined,
   );
-  const goal = h('p', { style: 'margin:0;color:var(--muted)' }, `You play ${userColor === 'white' ? 'White' : 'Black'}. ${pos?.goal ?? ''}`);
-  const tip = h('div.card', { hidden: true }, h('p', null, `💡 ${pos?.tip ?? ''}`));
+  const goal = h('p', { style: 'margin:0;color:var(--muted)' }, `🎯 ${pos?.goal ?? ''}`);
+  const tip = h('div.card', { hidden: true }, h('div.explain-title', null, icon('bulb', 16), 'Coach tip'), h('p', null, pos?.tip ?? ''));
   const levelRow = levelPicker(state.level, (l) => {
     game.state.level = l;
     persist();
   });
-  const boardHost = h('div');
+  const boardHost = h('div.board-card');
   const status = h('div.feedback', { 'aria-live': 'polite' });
   const moves = h('div.moves', { 'aria-label': 'Moves' });
-  const controls = h('div.btn-row');
+  const controls = h('div');
   const resultBox = h('div');
 
   root.append(header, goal, levelRow, boardHost, status, moves, controls, tip, resultBox);
@@ -108,7 +112,8 @@ function playView(ctx: Ctx, root: HTMLElement, state: GameState): ScreenHandle {
             else toast('Side panel isn’t available in this browser.');
           },
         },
-        '↗ Continue in the side panel (stays open while you browse)',
+        icon('panel', 15),
+        'Open in side panel — stays open while you browse',
       ),
     );
   }
@@ -152,10 +157,14 @@ function playView(ctx: Ctx, root: HTMLElement, state: GameState): ScreenHandle {
     clear(controls);
     if (game.state.result) return;
     controls.append(
-      h('button.btn', { onclick: () => undo(), disabled: game.state.moves.length === 0, title: 'Take back your last move' }, '↶ Undo'),
-      h('button.btn', { onclick: () => board.flip(), 'aria-label': 'Flip board', title: 'Flip board' }, '⇅'),
-      h('button.btn', { onclick: () => (tip.hidden = !tip.hidden), title: 'Show a tip' }, '💡 Tip'),
-      h('button.btn', { onclick: () => resign() }, '🏳 Resign'),
+      h(
+        'div.toolbar',
+        null,
+        toolBtn('bulb', 'Tip', () => (tip.hidden = !tip.hidden), { class: 'accent' }),
+        toolBtn('undo', 'Undo', () => undo(), { disabled: game.state.moves.length === 0 }),
+        toolBtn('flip', 'Flip', () => board.flip(), { 'aria-label': 'Flip board' }),
+        toolBtn('flag', 'Resign', () => resign()),
+      ),
     );
   }
 
@@ -163,7 +172,7 @@ function playView(ctx: Ctx, root: HTMLElement, state: GameState): ScreenHandle {
     clear(resultBox);
     const res = game.state.result;
     if (!res) return;
-    const icon = res.outcome === 'win' ? '🏆' : res.outcome === 'draw' ? '🤝' : '💪';
+    const emoji = res.outcome === 'win' ? '🏆' : res.outcome === 'draw' ? '🤝' : '💪';
     const userMoves = Math.ceil(game.state.moves.length / 2);
     const head =
       res.outcome === 'win'
@@ -176,29 +185,38 @@ function playView(ctx: Ctx, root: HTMLElement, state: GameState): ScreenHandle {
         ? 'Tip: before each move, check the enemy king still has a legal move.'
         : res.outcome === 'win' ? 'That’s exactly how you convert an advantage.' : 'Every game is practice. Try the position again?';
     const stepper = h(
-      'div.btn-row',
-      null,
-      h('button.btn.small', { onclick: () => step(0), 'aria-label': 'First move' }, '⏮'),
-      h('button.btn.small', { onclick: () => step((reviewPly ?? game.state.moves.length) - 1), 'aria-label': 'Previous move' }, '◀'),
-      h('button.btn.small', { onclick: () => step((reviewPly ?? game.state.moves.length) + 1), 'aria-label': 'Next move' }, '▶'),
-      h('button.btn.small', { onclick: () => step(game.state.moves.length), 'aria-label': 'Last move' }, '⏭'),
+      'div.toolbar',
+      { 'aria-label': 'Review moves' },
+      toolBtn('back', 'Start', () => step(0)),
+      toolBtn('undo', 'Back', () => step((reviewPly ?? game.state.moves.length) - 1)),
+      toolBtn('arrow', 'Forward', () => step((reviewPly ?? game.state.moves.length) + 1)),
+      toolBtn('chevron', 'End', () => step(game.state.moves.length)),
     );
     resultBox.append(
       h(
-        'div.card',
+        'div.result-sheet',
         null,
-        h('div.solved-banner.pop', null, icon, head),
-        h('p', null, `${RESULT_TEXT[res.reason]}. ${tipLine}`),
+        h(
+          'div.result-head',
+          null,
+          h('div.result-badge', { class: res.outcome === 'win' ? '' : 'neutral' }, emoji),
+          h('div', null, h('h2', null, head), h('p', null, RESULT_TEXT[res.reason])),
+        ),
+        h('p', null, tipLine),
         h('div.section-title', null, 'Review your moves'),
         stepper,
         h(
           'div.btn-row',
           null,
-          h('button.btn.primary', { onclick: () => ctx.go({ name: 'game', positionId: game.state.positionId }) }, '↺ Play again'),
+          h('button.btn.primary', { onclick: () => ctx.go({ name: 'game', positionId: game.state.positionId }) }, icon('reset', 16), 'Play again'),
           h('button.btn', { onclick: () => ctx.go({ name: 'game', fresh: true }) }, 'Other positions'),
         ),
       ),
     );
+    if (res.outcome === 'win' && !celebrated) {
+      celebrated = true;
+      celebrate();
+    }
     levelRow.hidden = true;
     status.className = `feedback ${res.outcome === 'win' ? 'good' : 'info'}`;
     status.textContent = RESULT_TEXT[res.reason];
