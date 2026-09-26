@@ -43,8 +43,22 @@ export const puzzleScreen: Screen = async (ctx, root, r) => {
       state = saved;
     }
   }
-  if (!puzzle) {
-    puzzle = choosePuzzle(ctx, route);
+  // Reopening on an already-finished puzzle would show the old mating position and
+  // look like a live one. It's already recorded, so go straight to a fresh puzzle.
+  if (ctx.reopened && puzzle && state && state.status !== 'playing' && state.recorded) {
+    const done = puzzle;
+    if (route.mode === 'daily') {
+      const pz = choosePuzzle(ctx, { name: 'puzzle', mode: 'practice', n: done.n }, done.id);
+      if (pz) await save(KEYS.puzzle, newPuzzleState(pz, 'practice'));
+      ctx.go({ name: 'puzzle', mode: 'practice', n: done.n });
+      return {};
+    }
+    puzzle = choosePuzzle(ctx, route, done.id);
+    state = undefined;
+    if (puzzle) toast('Last puzzle finished ✓ — here’s a new one', 'good');
+  }
+  if (!puzzle || !state) {
+    puzzle ??= choosePuzzle(ctx, route);
     if (!puzzle) {
       root.append(
         h('div.card', null, h('h3', null, 'All clear! 🎉'), h('p', null, 'No mistakes left to retry. Nice work.')),

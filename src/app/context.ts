@@ -13,7 +13,10 @@ export type Route =
   | { name: 'progress' };
 
 export interface Ctx {
-  surface: 'popup' | 'sidepanel';
+  /** 'overlay' = the floating window on a web page (Holdpad-style), framed by a content script. */
+  surface: 'popup' | 'sidepanel' | 'overlay';
+  /** True only for the first screen shown after the popup / side panel opens. */
+  reopened: boolean;
   settings: Settings;
   progress: Progress;
   engine(): Engine;

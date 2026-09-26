@@ -73,6 +73,32 @@ async function main() {
     return row(label, desc, g);
   }
 
+  /** The corner button needs access to every site, so it's asked for only when switched on. */
+  function launcherRow() {
+    return row(
+      'Quick-open button on web pages',
+      'A small Chess Break button in the bottom-right corner of pages. Chrome will ask to allow access to websites; nothing is read from them.',
+      h('input.switch', {
+        type: 'checkbox',
+        role: 'switch',
+        'aria-label': 'Quick-open button on web pages',
+        checked: s.showLauncher,
+        onchange: async (e: Event) => {
+          const input = e.target as HTMLInputElement;
+          const origins = { origins: ['<all_urls>'] };
+          let on = input.checked;
+          if (typeof chrome === 'undefined' || !chrome.permissions) on = false;
+          else if (on) on = await chrome.permissions.request(origins).catch(() => false);
+          else await chrome.permissions.remove(origins).catch(() => false);
+          input.checked = on;
+          await update({ showLauncher: on });
+          await chrome.runtime?.sendMessage({ type: 'launcher-changed' }).catch(() => undefined);
+          if (on) toast('Button added to your open pages ✓', 'good');
+        },
+      }),
+    );
+  }
+
   function swatches(key: 'boardTheme' | 'boardThemeDark', label: string) {
     const g = h('div.swatches', { role: 'group', 'aria-label': label });
     for (const [id, t] of Object.entries(BOARD_THEMES) as [BoardTheme, (typeof BOARD_THEMES)[BoardTheme]][]) {
@@ -107,6 +133,7 @@ async function main() {
           swatches('boardThemeDark', 'Board theme (dark mode)'),
           seg('pieceSet', 'Piece set', (Object.entries(PIECE_SETS) as [PieceSet, string][]).map(([k, v]) => [k, v])),
           seg('appTheme', 'App theme', [['light', '☀️ Light'], ['dark', '🌙 Dark'], ['auto', '🖥 Auto']]),
+          launcherRow(),
         );
         break;
       case 'board':
@@ -178,7 +205,7 @@ async function main() {
           h(
             'p.opt-desc',
             null,
-            'Puzzles: Lichess puzzle database (CC0). Engine: Stockfish (GPLv3). Board: chessground (GPLv3). Rules: chess.js. Permissions used: storage (save your progress) and side panel (longer games).',
+            'Puzzles: Lichess puzzle database (CC0). Engine: Stockfish (GPLv3). Board: chessground (GPLv3). Rules: chess.js. Permissions used: storage (save your progress), side panel (fallback on browser pages), activeTab + scripting (show the Chess Break window on the tab you click it on, only when you click). Site access is asked for only if you turn on the quick-open button.',
           ),
         );
         break;

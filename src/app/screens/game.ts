@@ -31,8 +31,9 @@ export const gameScreen: Screen = async (ctx, root, r) => {
     await save(KEYS.screen, { name: 'game' });
     return playView(ctx, root, st);
   }
-  // Resume the saved game (including a finished game's result/review screen).
-  if (saved && !route.fresh) return playView(ctx, root, saved);
+  // Resume the saved game. A finished one shows its result/review when navigated to,
+  // but on reopening the popup it goes back to the picker so it never looks live.
+  if (saved && !route.fresh && !(ctx.reopened && saved.result)) return playView(ctx, root, saved);
   return pickerView(ctx, root, level, (l) => (level = l));
 };
 

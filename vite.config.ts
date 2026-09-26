@@ -20,7 +20,12 @@ export default defineConfig({
         popup: resolve(import.meta.dirname, 'popup.html'),
         sidepanel: resolve(import.meta.dirname, 'sidepanel.html'),
         options: resolve(import.meta.dirname, 'options.html'),
+        // The app framed inside the in-page window (see src/content/overlay.ts).
+        overlay: resolve(import.meta.dirname, 'overlay.html'),
+        worker: resolve(import.meta.dirname, 'src/background/worker.ts'),
       },
+      // manifest.json names the service worker, so its file name can't carry a hash.
+      output: { entryFileNames: (chunk) => (chunk.name === 'worker' ? 'worker.js' : 'assets/[name]-[hash].js') },
     },
   },
   test: {

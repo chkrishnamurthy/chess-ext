@@ -7,7 +7,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite build --watch",
-    "build": "tsc --noEmit && vite build",
+    "build": "tsc --noEmit && vite build && vite build --config vite.content.config.ts --mode overlay && vite build --config vite.content.config.ts --mode launcher",
     "preview": "vite preview",
     "test": "vitest run",
     "typecheck": "tsc --noEmit",

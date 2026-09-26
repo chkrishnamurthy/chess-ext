@@ -16,7 +16,7 @@ Works with **no account, no chess site, and no internet**.
 | **Progress** | Streak (with an optional streak freeze), totals by category, first-try accuracy, a 7-day chart, weekly growth, badges and a list of mistakes to retry. You can export, import or reset your data. |
 | **Options** | Board and piece themes, light/dark/auto, legal-move dots, coordinates, auto-queen, click/drag input, orientation, hint style, coach verbosity, colorblind-safe palette, large print and reduced motion. A live board preview shows your changes. |
 
-**Trust rules:** the checker accepts *every* move that keeps a forced mate, not just one stored line. Nothing leaves the device. The extension only asks for the `storage` and `sidePanel` permissions.
+**Trust rules:** the checker accepts *every* move that keeps a forced mate, not just one stored line. Nothing leaves the device. The extension asks for `storage`, `sidePanel`, `activeTab` and `scripting`; site access is requested only if you turn on the optional corner button.
 
 ## Getting started
 
@@ -46,7 +46,10 @@ Load it in Chrome: `chrome://extensions` → enable **Developer mode** → **Loa
 
 ```
 src/
-  app/          shared popup + side-panel app: router, screens (home, puzzle, rush, game, progress)
+  app/          shared app (in-page window, popup, side panel): router, screens (home, puzzle, rush, game, progress)
+  background/   service worker: toolbar click / Alt+Shift+C → in-page window (popup, then side panel, as fallback)
+  content/      in-page window shell (genie open/close, resizable) and the optional corner button
+  shell/        pure helpers for the window: genie geometry, corner point, style pinning, focus trap
   game/         mateSolver (chessops bitboards), puzzleSession, gameSession, explain/hints, puzzles
   engine/       Stockfish Web-Worker wrapper + strength caps + JS fallback bot
   progress/     streaks, badges, stats (pure functions, unit-tested)

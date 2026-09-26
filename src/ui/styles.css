@@ -57,7 +57,9 @@
   /* board feedback */
   --flash-good: rgba(47, 180, 100, 0.55);
   --flash-bad: rgba(230, 80, 40, 0.55);
-  --last-move: rgba(155, 199, 0, 0.41);
+  /* Warm yellow reads on every board theme (wood, green, blue, grey, slate). */
+  --last-move: rgba(255, 214, 0, 0.5);
+  --last-move-ring: rgba(255, 170, 0, 0.95);
   --dest: rgba(20, 85, 30, 0.5);
 
   --r-sm: 10px;
@@ -119,7 +121,6 @@
   --bad-soft: #fcebdd;
   --flash-good: rgba(0, 114, 178, 0.55);
   --flash-bad: rgba(213, 94, 0, 0.6);
-  --last-move: rgba(86, 180, 233, 0.45);
   --dest: rgba(0, 114, 178, 0.55);
 }
 :root[data-theme='dark'].colorblind {
@@ -194,7 +195,8 @@ body.popup {
 :root.large body.popup {
   width: 440px;
 }
-body.sidepanel {
+body.sidepanel,
+body.overlay {
   height: 100vh;
   min-width: 300px;
   overflow: hidden;
@@ -303,7 +305,8 @@ body.sidepanel {
     transform: translateY(6px);
   }
 }
-.sidepanel .screen {
+.sidepanel .screen,
+.overlay .screen {
   max-width: 560px;
   margin: 0 auto;
   width: 100%;

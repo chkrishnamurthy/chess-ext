@@ -42,7 +42,8 @@ const fmt = (ms: number) => {
 
 export const rushScreen: Screen = async (ctx, root) => {
   let run = await load<RushState | null>(KEYS.rush, null);
-  if (!run || run.status === 'over') run = run?.status === 'over' ? run : freshRun();
+  // A finished run keeps its recap on screen, except on reopening: then start fresh.
+  if (!run || (run.status === 'over' && run.recorded && ctx.reopened)) run = freshRun();
   if (run.status === 'running') run.status = 'paused';
 
   const timerEl = h('span.rush-timer');

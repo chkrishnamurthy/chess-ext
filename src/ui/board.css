@@ -5,8 +5,10 @@
   aspect-ratio: 1;
   max-width: 100%;
 }
-.sidepanel .cb-board-wrap {
-  max-width: 520px;
+.sidepanel .cb-board-wrap,
+.overlay .cb-board-wrap {
+  /* Also capped by height, so the header, feedback and toolbar fit without scrolling. */
+  max-width: max(260px, min(520px, 100vh - 260px));
   margin: 0 auto;
 }
 .cb-board {
@@ -35,6 +37,10 @@ cg-board square.move-dest:hover {
 }
 cg-board square.last-move {
   background-color: var(--last-move);
+}
+/* The square the piece landed on gets a ring too, so "which piece just moved" is obvious. */
+cg-board square.last-dest {
+  box-shadow: inset 0 0 0 3px var(--last-move-ring);
 }
 cg-board square.selected {
   background-color: var(--dest);

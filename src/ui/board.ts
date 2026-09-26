@@ -29,6 +29,8 @@ export class Board {
   private pos?: BoardPosition;
   private promo?: HTMLElement;
   private kbd: HTMLInputElement;
+  /** Highlights that stay until the next position (the last move's landing square). */
+  private baseHighlight = new Map<Key, string>();
   onMove: (uci: string) => void = () => {};
   /** Set when the user flips the board with the in-board button; persists until the next puzzle/game. */
   flipped = false;
@@ -84,6 +86,8 @@ export class Board {
     this.hidePromotion();
     const chess = new Chess(p.fen);
     const turn: Color = chess.turn() === 'w' ? 'white' : 'black';
+    const dest = p.lastMove?.slice(2, 4) as Key | undefined;
+    this.baseHighlight = new Map(dest && this.settings.lastMove ? [[dest, 'last-dest']] : []);
     const canMove = p.movable === turn;
     const orientation = this.flipped ? (p.orientation === 'white' ? 'black' : 'white') : p.orientation;
     this.cg.set({
@@ -92,7 +96,7 @@ export class Board {
       turnColor: turn,
       check: chess.inCheck() ? turn : false,
       lastMove: p.lastMove ? ([p.lastMove.slice(0, 2), p.lastMove.slice(2, 4)] as Key[]) : undefined,
-      highlight: { custom: new Map() },
+      highlight: { custom: this.baseHighlight },
       movable: { color: canMove ? turn : undefined, dests: canMove ? dests(chess) : new Map() },
     });
     this.cg.setAutoShapes([]);
@@ -111,9 +115,12 @@ export class Board {
 
   /** Flash squares green/red (blue/orange in colorblind mode). */
   flash(squares: string[], kind: 'good' | 'bad', ms = 900): void {
-    const map = new Map(squares.map((s) => [s as Key, `flash-${kind}`]));
+    const map = new Map(this.baseHighlight);
+    for (const s of squares) map.set(s as Key, `flash-${kind}`);
     this.cg.set({ highlight: { custom: map } });
-    setTimeout(() => this.cg.set({ highlight: { custom: new Map() } }), ms);
+    const base = this.baseHighlight;
+    // Put the last-move ring back, unless a newer position has replaced it meanwhile.
+    setTimeout(() => this.baseHighlight === base && this.cg.set({ highlight: { custom: base } }), ms);
   }
 
   showHint(squares: string[], arrow?: [string, string]): void {

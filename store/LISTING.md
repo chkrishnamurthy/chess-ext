@@ -25,7 +25,9 @@ Puzzles come from the Lichess puzzle database (CC0). Engine: Stockfish.
 ## Permission justifications
 
 - **storage**: saves progress, settings and the current puzzle or game locally, so closing the popup never loses your place.
-- **sidePanel**: longer games against the computer can stay open in the side panel while you browse.
+- **activeTab + scripting**: clicking the icon shows Chess Break as a floating window over the current tab. The script is injected only into the tab the user clicked, and the app itself runs in an isolated extension frame.
+- **sidePanel**: fallback surface on browser pages where the floating window can't be injected.
+- **Optional host access (<all_urls>)**: requested only if the user turns on the quick-open corner button in Settings. The button script reads nothing from pages.
 
 ## Single purpose
 

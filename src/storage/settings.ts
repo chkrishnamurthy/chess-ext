@@ -24,6 +24,8 @@ export interface Settings {
   sound: boolean;
   streakFreeze: boolean;
   showRating: boolean;
+  /** Small Chess Break button in the bottom-right corner of web pages (needs site access). */
+  showLauncher: boolean;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -45,6 +47,7 @@ export const DEFAULT_SETTINGS: Settings = {
   sound: true,
   streakFreeze: true,
   showRating: false,
+  showLauncher: false,
 };
 
 export async function loadSettings(): Promise<Settings> {

@@ -9,6 +9,7 @@ import { icon, type IconName } from '../ui/icons';
 import { setSoundEnabled } from '../ui/sound';
 import { applyTheme, watchSystemTheme } from '../ui/themes';
 import type { Ctx, Route, Screen, ScreenHandle } from './context';
+import { OVERLAY_CLOSE, OVERLAY_CLOSED, OVERLAY_OPENED, OVERLAY_OPENING } from '../shell/overlay';
 import { openOptions } from './nav';
 import { gameScreen } from './screens/game';
 import { homeScreen } from './screens/home';
@@ -35,6 +36,8 @@ export async function startApp(surface: Ctx['surface']): Promise<void> {
 
   let engine: Engine | undefined;
   let current: ScreenHandle | undefined;
+  let reopened = false;
+  let shown = false;
 
   const streakEl = h('button.streak-pill', { onclick: () => ctx.go({ name: 'progress' }) });
   const soundBtn = h('button.icon-btn', {
@@ -68,6 +71,7 @@ export async function startApp(surface: Ctx['surface']): Promise<void> {
     kbdBtn,
     soundBtn,
     h('button.icon-btn', { title: 'Settings', 'aria-label': 'Settings', onclick: () => openOptions() }, icon('settings')),
+    surface === 'overlay' ? h('button.icon-btn', { title: 'Close (Esc)', 'aria-label': 'Close Chess Break', onclick: () => requestClose() }, icon('x')) : '',
   );
 
   // Bottom tab bar: every mode is one tap away.
@@ -110,6 +114,9 @@ export async function startApp(surface: Ctx['surface']): Promise<void> {
 
   const ctx: Ctx = {
     surface,
+    get reopened() {
+      return reopened;
+    },
     get settings() {
       return settings;
     },
@@ -137,6 +144,8 @@ export async function startApp(surface: Ctx['surface']): Promise<void> {
     setActiveTab(route.name);
     ctx.focus(false);
     await save(KEYS.screen, route);
+    reopened = !shown;
+    shown = true;
     current = await SCREENS[route.name](ctx, root, route);
   }
 
@@ -155,9 +164,51 @@ export async function startApp(surface: Ctx['surface']): Promise<void> {
     }
   });
 
+  if (surface === 'overlay') wireOverlay();
+
   refreshChrome();
-  // Reopening resumes exactly where the user left off.
-  const last = await load<Route>(KEYS.screen, { name: 'home' });
-  const resumable = last.name === 'puzzle' || last.name === 'rush' || last.name === 'game';
-  await show(resumable ? last : { name: 'home' });
+  await resume();
+
+  /** Reopening resumes exactly where the user left off. */
+  async function resume() {
+    shown = false; // the next screen counts as a reopen (see ctx.reopened)
+    const last = await load<Route>(KEYS.screen, { name: 'home' });
+    const resumable = last.name === 'puzzle' || last.name === 'rush' || last.name === 'game';
+    await show(resumable ? last : { name: 'home' });
+  }
+
+  /** In the in-page window the shell does the closing, so it can play the genie. */
+  function requestClose() {
+    window.parent.postMessage({ type: OVERLAY_CLOSE }, '*');
+  }
+
+  /**
+   * The in-page window only hides when closed, so mirror what closing and reopening the
+   * popup does: tear the screen down on close (pausing Rush, stopping the bot) and
+   * resume it on reopen (a finished puzzle becomes a fresh one).
+   */
+  function wireOverlay() {
+    let hidden = false;
+    window.addEventListener('message', (e) => {
+      if (e.source !== window.parent) return;
+      const type = (e.data as { type?: unknown } | null)?.type;
+      if (type === OVERLAY_CLOSED) {
+        hidden = true;
+        current?.destroy?.();
+        current = undefined;
+        clear(main);
+      } else if (type === OVERLAY_OPENING && hidden) {
+        hidden = false;
+        void resume();
+      } else if (type === OVERLAY_OPENED) {
+        (main.querySelector('button, select, input') as HTMLElement | null)?.focus({ preventScroll: true });
+      }
+    });
+    document.addEventListener('keydown', (e) => {
+      // Escape closes the window, unless it's dismissing something inside it first.
+      if (e.key !== 'Escape' || e.defaultPrevented || document.querySelector('.promo')) return;
+      e.preventDefault();
+      requestClose();
+    });
+  }
 }
