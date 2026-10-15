@@ -2,6 +2,9 @@
  * Generates public/icons/icon-{16,32,48,128}.png: a rounded green tile with a
  * checkerboard and a yellow lightning bolt ("a quick chess break").
  *   npm run icons
+ *
+ * The 128px icon doubles as the Chrome Web Store icon, which Google asks to be 96x96 artwork
+ * with 16 transparent pixels on every side, so it is drawn smaller inside a clear border.
  */
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { deflateSync } from 'node:zlib';
@@ -59,8 +62,10 @@ function sample(x: number, y: number, size: number): RGBA | null {
   return GREEN;
 }
 
-function render(size: number): Buffer {
+/** `pad` leaves that many transparent pixels around the artwork (the artwork shrinks to fit). */
+function render(size: number, pad = 0): Buffer {
   const ss = 4;
+  const art = size - 2 * pad;
   const raw = Buffer.alloc((size * 4 + 1) * size);
   for (let py = 0; py < size; py++) {
     raw[py * (size * 4 + 1)] = 0;
@@ -68,7 +73,10 @@ function render(size: number): Buffer {
       const acc = [0, 0, 0, 0];
       for (let sy = 0; sy < ss; sy++)
         for (let sx = 0; sx < ss; sx++) {
-          const c = sample((px + (sx + 0.5) / ss) / size, (py + (sy + 0.5) / ss) / size, size);
+          const ux = (px + (sx + 0.5) / ss - pad) / art;
+          const uy = (py + (sy + 0.5) / ss - pad) / art;
+          if (ux < 0 || uy < 0 || ux > 1 || uy > 1) continue; // inside the transparent border
+          const c = sample(ux, uy, art);
           if (!c) continue;
           acc[0] += c[0] * c[3];
           acc[1] += c[1] * c[3];
@@ -122,5 +130,5 @@ function png(w: number, h: number, raw: Buffer): Buffer {
 }
 
 mkdirSync('public/icons', { recursive: true });
-for (const s of [16, 32, 48, 128]) writeFileSync(`public/icons/icon-${s}.png`, render(s));
+for (const s of [16, 32, 48, 128]) writeFileSync(`public/icons/icon-${s}.png`, render(s, s === 128 ? 16 : 0));
 console.log('icons written to public/icons');

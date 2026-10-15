@@ -46,6 +46,6 @@ Open source (GPL-3.0): https://github.com/chkrishnamurthy/chess-ext
 
 A self-contained chess puzzle trainer and practice game.
 
-## Screenshots (1280×800)
+## Pictures
 
-Captured from the built app (light theme, popup size) in `store/screenshots/`. Files: 01-today, 02-puzzles, 03-quick-game, 04-themes, 05-ghost-race, 06-learn-pieces.
+See [README.md](README.md) for every image, its size and where to upload it. Screenshots (max 5, 1280×800): 01-today, 02-puzzles, 03-in-page-window, 04-quick-game, 05-learn. Promo tiles are in `assets/`.
