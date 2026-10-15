@@ -12,7 +12,7 @@ The app has four tabs: **Today** (what to do now, by how long you have), **Puzzl
 | Game | Tab | What it is |
 |---|---|---|
 | **Checkmate Challenge** | Puzzles | Mate in 1 / 2 / 3 on a real board. The opponent replies on its own. Hints come in steps (which piece, then the idea, then the move). After you solve it, you get a short explanation. |
-| **Daily Puzzle** | Puzzles | One puzzle per calendar day, the same for everyone. Mon–Tue Mate in 1, Wed–Thu Mate in 2, Fri–Sat Mate in 3, Sun Tricky. |
+| **Daily Puzzle** | Puzzles | One puzzle per calendar day. Everyone gets the same puzzle on the same date, so it can differ by a day across time zones. Mon–Tue Mate in 1, Wed–Thu Mate in 2, Fri–Sat Mate in 3, Sun Tricky. |
 | **Puzzle Rush** | Puzzles | Solve as many puzzles as you can in 3 minutes, with 3 strikes allowed. Tracks your best score for the day and all-time. The clock pauses when the popup closes. |
 | **Ghost Race** | Puzzles | 90 seconds on the same puzzles. A ghost replays your best run, so you can see whether you are ahead. |
 | **Streak** | Puzzles | No clock. Puzzles get harder one by one and your first wrong move ends the run. |

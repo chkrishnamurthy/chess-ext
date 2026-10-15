@@ -239,11 +239,14 @@ export function recordLearn(p: Progress, id: string, day: string): BadgeDef[] {
   return awardBadges(p, day);
 }
 
-export function recordGame(p: Progress, outcome: 'win' | 'draw' | 'loss', day: string, allowFreeze: boolean, kind: 'endgame' | 'quick' = 'endgame'): BadgeDef[] {
-  const rec = kind === 'quick' ? p.quick : p.game;
-  if (outcome === 'win') rec.w++;
-  else if (outcome === 'draw') rec.d++;
-  else rec.l++;
+/** `lesson` games count toward the day and badges but not toward either win/draw/loss record. */
+export function recordGame(p: Progress, outcome: 'win' | 'draw' | 'loss', day: string, allowFreeze: boolean, kind: 'endgame' | 'quick' | 'lesson' = 'endgame'): BadgeDef[] {
+  const rec = kind === 'quick' ? p.quick : kind === 'endgame' ? p.game : undefined;
+  if (rec) {
+    if (outcome === 'win') rec.w++;
+    else if (outcome === 'draw') rec.d++;
+    else rec.l++;
+  }
   if (outcome !== 'loss') touchDay(p, day, allowFreeze);
   return awardBadges(p, day);
 }
@@ -269,9 +272,55 @@ export function accuracy(p: Progress): number {
 
 // ---- persistence -----------------------------------------------------------------------
 
+const isObj = (v: unknown): v is Record<string, unknown> => typeof v === 'object' && v !== null && !Array.isArray(v);
+const num = (v: unknown, d: number) => (typeof v === 'number' && Number.isFinite(v) ? v : d);
+
+/**
+ * Turns whatever is in storage into a safe Progress: every field is checked, and anything
+ * missing or of the wrong type falls back to its default. Old saves (before a field existed)
+ * and damaged or hand-edited imports can therefore never crash the app.
+ */
+export function normalizeProgress(raw: unknown): Progress {
+  const d = emptyProgress();
+  if (!isObj(raw)) return d;
+  const rec = (v: unknown, fallback: Record<string, unknown>) => (isObj(v) ? v : fallback);
+  /** A record whose values must themselves be objects (days, solved): bad entries are dropped. */
+  const objMap = (v: unknown) => (isObj(v) ? Object.fromEntries(Object.entries(v).filter(([, x]) => isObj(x))) : {});
+  const triple = (v: unknown, fallback: { w: number; d: number; l: number }) =>
+    isObj(v) ? { w: num(v.w, 0), d: num(v.d, 0), l: num(v.l, 0) } : fallback;
+  const streak = isObj(raw.streak) ? raw.streak : {};
+  const byN = isObj(raw.byN) ? raw.byN : {};
+  const ghost = isObj(raw.ghost) && Array.isArray(raw.ghost.solves) ? { score: num(raw.ghost.score, 0), solves: raw.ghost.solves.filter((n): n is number => typeof n === 'number') } : undefined;
+  return {
+    v: 1,
+    solved: objMap(raw.solved) as Progress['solved'],
+    byN: { 1: num(byN[1], 0), 2: num(byN[2], 0), 3: num(byN[3], 0) },
+    attempts: num(raw.attempts, 0),
+    firstTry: num(raw.firstTry, 0),
+    days: objMap(raw.days) as Progress['days'],
+    streak: {
+      current: num(streak.current, 0),
+      best: num(streak.best, 0),
+      lastDay: typeof streak.lastDay === 'string' ? streak.lastDay : null,
+      freezes: num(streak.freezes, 1),
+      frozenDays: Array.isArray(streak.frozenDays) ? streak.frozenDays.filter((x): x is string => typeof x === 'string') : [],
+    },
+    rushBest: num(raw.rushBest, 0),
+    game: triple(raw.game, d.game),
+    quick: triple(raw.quick, d.quick),
+    streakBest: num(raw.streakBest, 0),
+    coordsBest: num(raw.coordsBest, 0),
+    ...(ghost ? { ghost } : {}),
+    learn: rec(raw.learn, d.learn) as Progress['learn'],
+    mistakes: Array.isArray(raw.mistakes) ? raw.mistakes.filter((x): x is string => typeof x === 'string') : [],
+    badges: rec(raw.badges, d.badges) as Progress['badges'],
+    rating: num(raw.rating, 1000),
+    daily: rec(raw.daily, d.daily) as Progress['daily'],
+  };
+}
+
 export async function loadProgress(): Promise<Progress> {
-  const p = await load<Progress | null>(KEYS.progress, null);
-  return p ? { ...emptyProgress(), ...p, learn: { ...p.learn }, quick: { ...emptyProgress().quick, ...p.quick } } : emptyProgress();
+  return normalizeProgress(await load<unknown>(KEYS.progress, null));
 }
 
 export async function saveProgress(p: Progress): Promise<void> {

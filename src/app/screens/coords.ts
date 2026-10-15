@@ -4,7 +4,7 @@ import type { Key } from '@lichess-org/chessground/types';
 import { randomSquare, squareAt, type Orientation } from '../../game/coords';
 import { recordCoords } from '../../progress/progress';
 import { prefersReducedMotion } from '../../storage/settings';
-import { clear, h, toast } from '../../ui/dom';
+import { announce, clear, h, toast } from '../../ui/dom';
 import { icon } from '../../ui/icons';
 import { play } from '../../ui/sound';
 import { GAMES } from '../catalog';
@@ -37,6 +37,28 @@ export const coordsScreen: Screen = async (ctx, root) => {
   const bar = h('div.rush-bar', null, timerEl, targetEl, scoreEl);
   const controls = h('div');
   const overlay = h('div');
+  // Keyboard play (same toggle as the puzzle boards): type the square name and press Enter.
+  const typed = h('input.kbd-input', {
+    type: 'text',
+    placeholder: 'Type the square (e.g. e4) and press Enter',
+    'aria-label': 'Type the square',
+    autocomplete: 'off',
+    spellcheck: false,
+    maxlength: 2,
+    onkeydown: (e: KeyboardEvent) => {
+      if (e.key !== 'Enter') return;
+      const sq = typed.value.trim().toLowerCase();
+      if (status !== 'running' || locked) return;
+      if (/^[a-h][1-8]$/.test(sq)) {
+        typed.value = '';
+        answer(sq);
+      } else {
+        typed.value = ''; // clear it so the next try isn't blocked by the 2-character limit
+        typed.classList.add('shake');
+        setTimeout(() => typed.classList.remove('shake'), 400);
+      }
+    },
+  });
   const intro = h(
     'div.rush-intro',
     null,
@@ -52,6 +74,7 @@ export const coordsScreen: Screen = async (ctx, root) => {
     intro,
     bar,
     boardHost,
+    typed,
     controls,
     overlay,
   );
@@ -85,10 +108,12 @@ export const coordsScreen: Screen = async (ctx, root) => {
     locked = true;
     if (sq === target) {
       score += 1;
+      announce(`Correct, ${sq}`);
       play('move');
       flash([[sq, 'good']]);
     } else {
       misses += 1;
+      announce(`Not ${sq}. The square was ${target}.`);
       play('end');
       flash([[sq, 'bad'], [target, 'good']], 700);
     }
@@ -100,6 +125,7 @@ export const coordsScreen: Screen = async (ctx, root) => {
     if (status !== 'running') return;
     target = randomSquare(target);
     targetEl.textContent = target;
+    announce(`Find ${target}`);
     locked = false;
   }
 
@@ -146,6 +172,7 @@ export const coordsScreen: Screen = async (ctx, root) => {
     locked = false;
     target = randomSquare(undefined);
     targetEl.textContent = target;
+    announce(`Find ${target}`);
     clear(overlay);
     renderStage();
     renderBar();
@@ -167,8 +194,7 @@ export const coordsScreen: Screen = async (ctx, root) => {
     clearInterval(timer);
     clearTimeout(nextTimer);
     play('end');
-    const { best, badges } = recordCoords(ctx.progress, score, ctx.today(), ctx.settings.streakFreeze);
-    await ctx.saveProgress();
+    const { best, badges } = await ctx.updateProgress((p) => recordCoords(p, score, ctx.today(), ctx.settings.streakFreeze));
     for (const b of badges) toast(`${b.icon} Badge unlocked: ${b.name}`, 'good', 3200);
     renderStage();
     const total = score + misses;

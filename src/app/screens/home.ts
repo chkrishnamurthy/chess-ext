@@ -1,6 +1,6 @@
 import { dailyPuzzle, getPuzzle, TIER_LABEL } from '../../game/puzzles';
-import { GameSession, type GameState } from '../../game/gameSession';
-import { PuzzleSession, type PuzzleState } from '../../game/puzzleSession';
+import { GameSession, gameStateOk, type GameState } from '../../game/gameSession';
+import { PuzzleSession, puzzleStateOk, type PuzzleState } from '../../game/puzzleSession';
 import { addDays, liveStreak } from '../../progress/progress';
 import { KEYS, load } from '../../storage/store';
 import { clear, h } from '../../ui/dom';
@@ -19,8 +19,12 @@ let chosenTime: keyof typeof BY_TIME = '3';
 /** Today tab: what to do right now. One resume/daily card, then games that fit the time you have. */
 export const homeScreen: Screen = async (ctx, root) => {
   const p = ctx.progress;
-  const game = await load<GameState | null>(KEYS.game, null);
-  const puzzle = await load<PuzzleState | null>(KEYS.puzzle, null);
+  // A damaged save is ignored rather than allowed to break the screen.
+  const savedGame = await load<GameState | null>(KEYS.game, null);
+  const game = savedGame && gameStateOk(savedGame) ? savedGame : null;
+  const savedPuzzle = await load<PuzzleState | null>(KEYS.puzzle, null);
+  const savedPz = savedPuzzle ? getPuzzle(savedPuzzle.puzzleId) : undefined;
+  const puzzle = savedPuzzle && savedPz && puzzleStateOk(savedPz, savedPuzzle) ? savedPuzzle : null;
   const totalSolved = Object.keys(p.solved).length;
   const firstVisit = totalSolved === 0 && p.attempts === 0;
 

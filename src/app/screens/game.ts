@@ -275,9 +275,11 @@ function playView(ctx: Ctx, root: HTMLElement, state: GameState): ScreenHandle {
     announce(RESULT_TEXT[res.reason]);
     if (!game.state.recorded) {
       game.state.recorded = true;
-      const badges = recordGame(ctx.progress, res.outcome, ctx.today(), ctx.settings.streakFreeze, quick ? 'quick' : 'endgame');
-      if (lesson && res.outcome === 'win') badges.push(...recordLearn(ctx.progress, lesson.id, ctx.today()));
-      await ctx.saveProgress();
+      const badges = await ctx.updateProgress((p) => {
+        const earned = recordGame(p, res.outcome, ctx.today(), ctx.settings.streakFreeze, quick ? 'quick' : lesson ? 'lesson' : 'endgame');
+        if (lesson && res.outcome === 'win') earned.push(...recordLearn(p, lesson.id, ctx.today()));
+        return earned;
+      });
       for (const b of badges) toast(`${b.icon} Badge unlocked: ${b.name}`, 'good', 3200);
     }
     persist();

@@ -36,6 +36,20 @@ export function newPuzzleState(p: Puzzle, mode: PuzzleState['mode'], theme?: str
   return { puzzleId: p.id, mode, played: [], status: 'playing', mistakes: 0, hintLevel: 0, ...(theme ? { theme } : {}) };
 }
 
+/** False when a saved puzzle attempt can't be rebuilt, so callers can ignore it instead of crashing. */
+export function puzzleStateOk(p: Puzzle, s: PuzzleState): boolean {
+  try {
+    const q = new PuzzleSession(p, s);
+    q.fen();
+    q.movesLeft();
+    q.solverColor();
+    q.lastMove();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export class PuzzleSession {
   private solver = new MateSolver(1_500_000);
 

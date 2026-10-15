@@ -53,14 +53,31 @@ export async function launch(ctx: Ctx, id: GameId, route: Route): Promise<void> 
   const seen = await load<Partial<Record<GameId, true>>>(KEYS.seen, {});
   if (!SHEETED.includes(id) || seen[id]) return ctx.go(route);
   const g = GAMES[id];
+  const opener = document.activeElement as HTMLElement | null;
   const close = () => {
     sheet.remove();
     document.removeEventListener('keydown', onKey);
+    opener?.focus?.(); // hand focus back to what opened the sheet
   };
   const onKey = (e: KeyboardEvent) => {
     if (e.key === 'Escape') {
       e.preventDefault();
       close();
+    } else if (e.key === 'Tab') {
+      // Keep Tab inside the sheet: it is modal, so the page behind must not take focus.
+      const items = [...sheet.querySelectorAll<HTMLElement>('button:not([disabled])')];
+      if (!items.length) return;
+      const first = items[0];
+      const last = items[items.length - 1];
+      const active = document.activeElement;
+      const outside = !sheet.contains(active);
+      if (e.shiftKey && (active === first || outside)) {
+        e.preventDefault();
+        last.focus();
+      } else if (!e.shiftKey && (active === last || outside)) {
+        e.preventDefault();
+        first.focus();
+      }
     }
   };
   const start = h(

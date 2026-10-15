@@ -209,13 +209,9 @@ export const puzzleScreen: Screen = async (ctx, root, r) => {
     if (!session.state.recorded) {
       session.state.recorded = true;
       const solved = session.state.status === 'solved';
-      const badges = recordPuzzle(
-        ctx.progress,
-        { puzzle: session.puzzle, solved, firstTry: session.firstTry(), daily: route.mode === 'daily' },
-        ctx.today(),
-        ctx.settings.streakFreeze,
+      const badges = await ctx.updateProgress((p) =>
+        recordPuzzle(p, { puzzle: session.puzzle, solved, firstTry: session.firstTry(), daily: route.mode === 'daily' }, ctx.today(), ctx.settings.streakFreeze),
       );
-      await ctx.saveProgress();
       if (route.mode === 'theme' && solved && themeSolved(ctx.progress.solved, route.theme) === MASTER_AT) toast(`🎓 ${themeName(route.theme)} mastered!`, 'good', 3200);
       for (const b of badges) toast(`${b.icon} Badge unlocked: ${b.name}`, 'good', 3200);
     }

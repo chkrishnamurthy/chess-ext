@@ -110,6 +110,17 @@ export class GameSession {
   }
 }
 
+/** False when a saved game can't be rebuilt (damaged FEN or moves), so callers can ignore it instead of crashing. */
+export function gameStateOk(s: GameState): boolean {
+  try {
+    const g = new GameSession(s);
+    g.fen();
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export const RESULT_TEXT: Record<GameResult['reason'], string> = {
   checkmate: 'Checkmate',
   stalemate: 'Stalemate — careful, the king had no moves but wasn’t in check',

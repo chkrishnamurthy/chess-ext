@@ -10,6 +10,7 @@ import { setSoundEnabled } from '../ui/sound';
 import { applyTheme, watchSystemTheme } from '../ui/themes';
 import type { Ctx, Route, Screen, ScreenHandle } from './context';
 import { OVERLAY_CLOSE, OVERLAY_CLOSED, OVERLAY_OPENED, OVERLAY_OPENING } from '../shell/overlay';
+import { fatalCard } from './fatal';
 import { openOptions } from './nav';
 import { gameScreen } from './screens/game';
 import { homeScreen } from './screens/home';
@@ -42,8 +43,18 @@ const SCREENS: Record<Route['name'], Screen> = {
   progress: progressScreen,
 };
 
-/** Boots the shared app into the popup or the side panel. */
+/** Boots the shared app into the popup, side panel or in-page window. A failure shows a recovery card, never a blank window. */
 export async function startApp(surface: Ctx['surface']): Promise<void> {
+  try {
+    await boot(surface);
+  } catch (error) {
+    console.error('[chess-break] failed to start', error);
+    document.body.classList.add(surface);
+    document.body.replaceChildren(h('div.app', null, h('main.screen-host', null, h('section.screen', null, fatalCard(error)))));
+  }
+}
+
+async function boot(surface: Ctx['surface']): Promise<void> {
   document.body.classList.add(surface);
   let settings: Settings = await loadSettings();
   let progress: Progress = await loadProgress();
@@ -147,9 +158,15 @@ export async function startApp(surface: Ctx['surface']): Promise<void> {
     },
     engine: () => (engine ??= new Engine()),
     go: (route) => void show(route),
-    saveProgress: async () => {
-      await saveProgress(progress);
-      refreshChrome();
+    updateProgress: <T>(fn: (p: Progress) => T): Promise<T> => {
+      const run = async () => {
+        progress = await loadProgress();
+        const result = fn(progress);
+        await saveProgress(progress);
+        refreshChrome();
+        return result;
+      };
+      return typeof navigator !== 'undefined' && navigator.locks ? (navigator.locks.request('cb-progress', run) as Promise<T>) : run();
     },
     today: () => dayKey(),
     focus: (on) => app.classList.toggle('focus', on),
@@ -165,10 +182,18 @@ export async function startApp(surface: Ctx['surface']): Promise<void> {
     main.scrollTo(0, 0);
     setActiveTab(route.name);
     ctx.focus(false);
-    await save(KEYS.screen, route);
-    reopened = !shown;
-    shown = true;
-    current = await SCREENS[route.name](ctx, root, route);
+    try {
+      await save(KEYS.screen, route);
+      reopened = !shown;
+      shown = true;
+      current = await SCREENS[route.name](ctx, root, route);
+    } catch (error) {
+      // One broken screen must not take the whole app down: offer a way out.
+      console.error(`[chess-break] screen "${route.name}" failed`, error);
+      current = undefined;
+      clear(root);
+      root.append(fatalCard(error, route.name === 'home' ? undefined : () => ctx.go({ name: 'home' })));
+    }
   }
 
   // Keep surfaces in sync: settings from the Options page, progress from the other surface.
@@ -228,7 +253,7 @@ export async function startApp(surface: Ctx['surface']): Promise<void> {
     });
     document.addEventListener('keydown', (e) => {
       // Escape closes the window, unless it's dismissing something inside it first.
-      if (e.key !== 'Escape' || e.defaultPrevented || document.querySelector('.promo')) return;
+      if (e.key !== 'Escape' || e.defaultPrevented || document.querySelector('.promo, .sheet-scrim')) return;
       e.preventDefault();
       requestClose();
     });

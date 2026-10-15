@@ -255,21 +255,22 @@ function runScreen(cfg: RunConfig): Screen {
     play('end');
     if (!run!.recorded) {
       run!.recorded = true;
-      const p = ctx.progress;
       const today = ctx.today();
-      const prevToday = (ghostMode ? p.days[today]?.ghost : p.days[today]?.rush) ?? 0;
-      for (const id of run!.missed) {
-        const pz = getPuzzle(id);
-        if (pz) recordPuzzle(p, { puzzle: pz, solved: false, firstTry: false, rush: true }, today, ctx.settings.streakFreeze);
-      }
-      const prevGhost = p.ghost?.score ?? 0;
-      const { best, badges } = ghostMode
-        ? recordGhost(p, run!.score, run!.solves ?? [], today, ctx.settings.streakFreeze)
-        : recordRush(p, run!.score, today, ctx.settings.streakFreeze);
+      const prevToday = (ghostMode ? ctx.progress.days[today]?.ghost : ctx.progress.days[today]?.rush) ?? 0;
+      const { best, badges, prevGhost } = await ctx.updateProgress((p) => {
+        for (const id of run!.missed) {
+          const pz = getPuzzle(id);
+          if (pz) recordPuzzle(p, { puzzle: pz, solved: false, firstTry: false, rush: true }, today, ctx.settings.streakFreeze);
+        }
+        const before = p.ghost?.score ?? 0;
+        const result = ghostMode
+          ? recordGhost(p, run!.score, run!.solves ?? [], today, ctx.settings.streakFreeze)
+          : recordRush(p, run!.score, today, ctx.settings.streakFreeze);
+        return { ...result, prevGhost: before };
+      });
       run!.newBest = best && run!.score > 0;
       if (ghostMode) run!.beatGhost = run!.score > prevGhost && prevGhost > 0;
       if (!best && run!.score > prevToday && prevToday > 0) toast('New best for today!', 'good');
-      await ctx.saveProgress();
       for (const b of badges) toast(`${b.icon} Badge unlocked: ${b.name}`, 'good', 3200);
     }
     persist();

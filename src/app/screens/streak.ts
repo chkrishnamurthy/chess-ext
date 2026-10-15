@@ -127,15 +127,15 @@ export const streakScreen: Screen = async (ctx, root) => {
     play('end');
     if (!run!.recorded) {
       run!.recorded = true;
-      const p = ctx.progress;
       const today = ctx.today();
-      if (run!.missed) {
-        const pz = getPuzzle(run!.missed);
-        if (pz) recordPuzzle(p, { puzzle: pz, solved: false, firstTry: false, rush: true }, today, ctx.settings.streakFreeze);
-      }
-      const { best, badges } = recordStreak(p, run!.score, today, ctx.settings.streakFreeze);
+      const { best, badges } = await ctx.updateProgress((p) => {
+        if (run!.missed) {
+          const pz = getPuzzle(run!.missed);
+          if (pz) recordPuzzle(p, { puzzle: pz, solved: false, firstTry: false, rush: true }, today, ctx.settings.streakFreeze);
+        }
+        return recordStreak(p, run!.score, today, ctx.settings.streakFreeze);
+      });
       run!.newBest = best && run!.score > 0;
-      await ctx.saveProgress();
       for (const b of badges) toast(`${b.icon} Badge unlocked: ${b.name}`, 'good', 3200);
     }
     persist();

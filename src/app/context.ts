@@ -31,7 +31,11 @@ export interface Ctx {
   progress: Progress;
   engine(): Engine;
   go(route: Route): void;
-  saveProgress(): Promise<void>;
+  /**
+   * Change progress safely: under a cross-window lock, reads the latest saved progress, applies `fn`
+   * to it and saves. Two open windows (popup, side panel, in-page) can't overwrite each other.
+   */
+  updateProgress<T>(fn: (p: Progress) => T): Promise<T>;
   today(): string;
   /** Focus mode: hide the tab bar so the board + controls fit without scrolling. */
   focus(on: boolean): void;

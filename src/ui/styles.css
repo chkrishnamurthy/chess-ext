@@ -1822,3 +1822,28 @@ body.overlay {
 .ghost-count.ahead {
   color: var(--good);
 }
+
+/* ---------- recovery card ---------- */
+.fatal {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 16px;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--r);
+}
+.fatal h2,
+.fatal p {
+  margin: 0;
+}
+.fatal-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.fatal-detail {
+  color: var(--faint);
+  font-size: 0.75em;
+  word-break: break-word;
+}

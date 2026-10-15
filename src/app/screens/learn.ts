@@ -54,11 +54,35 @@ function drillView(ctx: Parameters<Screen>[0], root: HTMLElement, drill: Drill) 
   const status = h('div.feedback', { 'aria-live': 'polite' });
   const info = h('div.rush-bar');
   const resultBox = h('div');
+  // Keyboard play (same toggle as the puzzle boards): type the square to move to, e.g. a6.
+  const typed = h('input.kbd-input', {
+    type: 'text',
+    placeholder: 'Type a square to move to (e.g. a6) and press Enter',
+    'aria-label': 'Type the square to move to',
+    autocomplete: 'off',
+    spellcheck: false,
+    maxlength: 2,
+    onkeydown: (e: KeyboardEvent) => {
+      if (e.key !== 'Enter' || finished) return;
+      const sq = typed.value.trim().toLowerCase();
+      if (pieceMoves(drill.role, at, new Set(left)).includes(sq)) {
+        typed.value = '';
+        onMove(sq);
+      } else {
+        typed.value = '';
+        typed.classList.add('shake');
+        setTimeout(() => typed.classList.remove('shake'), 400);
+        status.className = 'feedback bad';
+        status.textContent = `The ${drill.name.toLowerCase()} can’t move to ${sq || 'there'}.`;
+      }
+    },
+  });
 
   root.append(
     screenHeader(ctx, drill.name, drill.how, undefined, { family: 'learn', back: { name: 'learn' }, backLabel: 'Back to the piece list' }),
     info,
     boardHost,
+    typed,
     status,
     resultBox,
   );
@@ -109,8 +133,9 @@ function drillView(ctx: Parameters<Screen>[0], root: HTMLElement, drill: Drill) 
     const n = stars(moves, par);
     status.className = 'feedback good';
     status.textContent = `✅ All captured in ${moves} move${moves === 1 ? '' : 's'}!`;
-    const badges = recordLearn(ctx.progress, drillId(drill), ctx.today());
-    void ctx.saveProgress().then(() => badges.forEach((b) => toast(`${b.icon} Badge unlocked: ${b.name}`, 'good', 3200)));
+    void ctx
+      .updateProgress((p) => recordLearn(p, drillId(drill), ctx.today()))
+      .then((badges) => badges.forEach((b) => toast(`${b.icon} Badge unlocked: ${b.name}`, 'good', 3200)));
     play('solve');
     celebrate();
     const idx = DRILLS.indexOf(drill);

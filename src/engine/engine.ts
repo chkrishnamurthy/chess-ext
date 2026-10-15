@@ -43,6 +43,9 @@ export function levelConfig(level: BotLevel | number): LevelConfig {
   return LEVELS[level];
 }
 
+/** How long past its time budget a search may run before it is treated as hung. */
+const SEARCH_GRACE_MS = 5000;
+
 type Pending = { resolve: (uci: string) => void; lines: Map<number, { uci: string; score: number }> };
 
 export class Engine {
@@ -102,14 +105,41 @@ export class Engine {
 
   private lastLines: { uci: string; score: number }[] = [];
 
+  /** Searches run one at a time: the engine answers with a bare `bestmove`, so overlapping searches would swap results. */
+  private chain: Promise<unknown> = Promise.resolve();
+
   /** Best move for the side to move in `fen` at the given bot level. */
-  async bestMove(fen: string, level: BotLevel | number): Promise<string> {
+  bestMove(fen: string, level: BotLevel | number): Promise<string> {
+    // A search still running was superseded (undo, new game): hurry it along so this one starts sooner.
+    if (this.pending) this.worker?.postMessage('stop');
+    const run = this.chain.then(() => this.search(fen, level));
+    this.chain = run.catch(() => undefined);
+    return run;
+  }
+
+  private async search(fen: string, level: BotLevel | number): Promise<string> {
     await this.start();
     if (this.failed || !this.worker) return fallbackMove(fen);
     const cfg = levelConfig(level);
     const w = this.worker;
+    this.lastLines = []; // never let a previous position's lines leak into this move's slack pick
     const best = await new Promise<string>((resolve) => {
-      this.pending = { resolve, lines: new Map() };
+      // A worker that never answers must not freeze the game: give up, restart it next time, use the fallback bot.
+      const timer = setTimeout(() => {
+        if (this.pending !== entry) return;
+        console.warn('[chess-break] Stockfish did not answer in time, using the fallback bot.');
+        this.pending = undefined;
+        this.dispose();
+        resolve('');
+      }, cfg.movetime + SEARCH_GRACE_MS);
+      const entry: Pending = {
+        resolve: (uci) => {
+          clearTimeout(timer);
+          resolve(uci);
+        },
+        lines: new Map(),
+      };
+      this.pending = entry;
       w.postMessage('ucinewgame');
       w.postMessage(`setoption name Skill Level value ${cfg.skill}`);
       w.postMessage(`setoption name MultiPV value ${cfg.multipv}`);

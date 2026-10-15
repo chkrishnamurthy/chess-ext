@@ -1,6 +1,6 @@
 import { DRILLS } from '../../game/learn';
 import { LESSONS } from '../../game/lessons';
-import { GameSession, type GameState } from '../../game/gameSession';
+import { GameSession, gameStateOk, type GameState } from '../../game/gameSession';
 import { KEYS, load } from '../../storage/store';
 import { h } from '../../ui/dom';
 import { GAMES } from '../catalog';
@@ -11,7 +11,7 @@ import { gameTitle } from './game';
 /** Play tab: games against the computer. */
 export const playScreen: Screen = async (ctx, root) => {
   const saved = await load<GameState | null>(KEYS.game, null);
-  const unfinished = saved && !saved.result ? saved : null;
+  const unfinished = saved && !saved.result && gameStateOk(saved) ? saved : null;
 
   const p = ctx.progress;
   const lessonsDone = Object.keys(p.learn).filter((k) => k.startsWith('lesson-')).length;
