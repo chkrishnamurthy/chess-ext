@@ -565,3 +565,8 @@ input.switch:checked::after {
     gap: 14px;
   }
 }
+
+.opt-foot a {
+  color: inherit;
+  text-decoration: underline;
+}

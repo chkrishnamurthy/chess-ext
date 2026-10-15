@@ -20,4 +20,6 @@ Chess Break does **not** collect, transmit, sell or share any personal data.
 | `sidePanel` | Fallback on browser pages (like the New Tab page) where the window can't be shown |
 | Site access (optional, off by default) | Only if you turn on the quick-open button, to show a small button in the corner of pages. Nothing is read from them. |
 
+Chess Break is open source (GPL-3.0). You can read exactly what it does: https://github.com/chkrishnamurthy/chess-ext
+
 Contact: _add a support email or URL before publishing_.

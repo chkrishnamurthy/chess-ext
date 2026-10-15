@@ -90,5 +90,7 @@ Themes use the tags already on each puzzle. Current library: 3,600 verified puzz
 
 ## Licensing
 
+Copyright (C) 2026 chkrishnamurthy. Chess Break is free software under the GNU GPL v3 or later (see [LICENSE](LICENSE)). The licences and credits for everything it bundles are in [public/legal/THIRD-PARTY-NOTICES.txt](public/legal/THIRD-PARTY-NOTICES.txt), which also ships inside the extension and is linked from Options. Run `npm run notices` after changing dependencies.
+
 This project is GPL-3.0-or-later, because it bundles GPL-3.0 components: chessground, chessops and Stockfish.
 chess.js is BSD-2-Clause. Puzzles come from the Lichess puzzle database (CC0), and each imported puzzle keeps its Lichess id in `src`.

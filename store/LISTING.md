@@ -33,6 +33,8 @@ It never reads or interferes with games on chess websites.
 
 Puzzles come from the Lichess puzzle database (CC0). Engine: Stockfish.
 
+Open source (GPL-3.0): https://github.com/chkrishnamurthy/chess-ext
+
 ## Permission justifications
 
 - **storage**: saves progress, settings and the current puzzle or game locally, so closing the popup never loses your place.

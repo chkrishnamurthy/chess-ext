@@ -43,6 +43,10 @@ const PRIVACY = [
 
 const hasChrome = typeof chrome !== 'undefined' && !!chrome.runtime?.id;
 
+/** Where the source code lives (the GPL requires it to be available to users). */
+const SOURCE_URL = 'https://github.com/chkrishnamurthy/chess-ext';
+const version = hasChrome ? chrome.runtime.getManifest().version : '';
+
 async function main() {
   let s = await loadSettings();
   applyTheme(s);
@@ -350,6 +354,16 @@ async function main() {
     ),
     dataCard(),
     card('privacy', h('ul.check-list', null, ...PRIVACY.map((line) => h('li', null, icon('check', 16), h('span', null, line))))),
+    h(
+      'p.opt-foot',
+      null,
+      `Chess Break${version ? ` ${version}` : ''} is free software under the GNU GPL v3 or later. `,
+      h('a', { href: SOURCE_URL, target: '_blank', rel: 'noopener' }, 'Source code'),
+      ' · ',
+      h('a', { href: 'legal/LICENSE.txt', target: '_blank', rel: 'noopener' }, 'Licence'),
+      ' · ',
+      h('a', { href: 'legal/THIRD-PARTY-NOTICES.txt', target: '_blank', rel: 'noopener' }, 'Third-party notices'),
+    ),
     h('p.opt-foot', null, 'Puzzles: Lichess puzzle database (CC0). Engine: Stockfish (GPLv3). Board: chessground (GPLv3). Rules: chess.js.'),
   );
   syncAll();
