@@ -11,6 +11,9 @@ export interface DayLog {
   attempted: number;
   firstTry: number;
   rush?: number;
+  streak?: number;
+  coords?: number;
+  ghost?: number;
 }
 
 export interface Progress {
@@ -23,6 +26,14 @@ export interface Progress {
   streak: { current: number; best: number; lastDay: string | null; freezes: number; frozenDays: string[] };
   rushBest: number;
   game: { w: number; d: number; l: number };
+  /** Quick Game record (Win the Endgame is `game`). */
+  quick: { w: number; d: number; l: number };
+  streakBest: number;
+  coordsBest: number;
+  /** Best Ghost Race run: score and the seconds-into-the-race of each solve. */
+  ghost?: { score: number; solves: number[] };
+  /** Finished lessons and piece drills: id -> day. */
+  learn: Record<string, string>;
   mistakes: string[];
   badges: Record<string, string>;
   rating: number;
@@ -40,6 +51,10 @@ export function emptyProgress(): Progress {
     streak: { current: 0, best: 0, lastDay: null, freezes: 1, frozenDays: [] },
     rushBest: 0,
     game: { w: 0, d: 0, l: 0 },
+    quick: { w: 0, d: 0, l: 0 },
+    streakBest: 0,
+    coordsBest: 0,
+    learn: {},
     mistakes: [],
     badges: {},
     rating: 1000,
@@ -115,7 +130,12 @@ export const BADGES: BadgeDef[] = [
   { id: 'streak30', icon: '💎', name: 'Habit formed', desc: '30-day streak', test: (p) => p.streak.best >= 30 },
   { id: 'rush10', icon: '⚡', name: 'Quick hands', desc: 'Score 10 in Puzzle Rush', test: (p) => p.rushBest >= 10 },
   { id: 'rush20', icon: '🌩️', name: 'Lightning', desc: 'Score 20 in Puzzle Rush', test: (p) => p.rushBest >= 20 },
-  { id: 'finish', icon: '♔', name: 'Closer', desc: 'Win a Finish the Position game', test: (p) => p.game.w >= 1 },
+  { id: 'streak10', icon: '🔥', name: 'On a roll', desc: 'Reach a Streak of 10', test: (p) => p.streakBest >= 10 },
+  { id: 'coords20', icon: '🧭', name: 'Navigator', desc: 'Score 20 in Coordinates', test: (p) => p.coordsBest >= 20 },
+  { id: 'quick', icon: '♞', name: 'Full game', desc: 'Win a Quick Game', test: (p) => p.quick.w >= 1 },
+  { id: 'pieces', icon: '♘', name: 'Piece pro', desc: 'Finish all six piece drills', test: (p) => Object.keys(p.learn).filter((k) => k.startsWith('piece-')).length >= 6 },
+  { id: 'lesson', icon: '🎓', name: 'Student', desc: 'Win an endgame lesson', test: (p) => Object.keys(p.learn).some((k) => k.startsWith('lesson-')) },
+  { id: 'finish', icon: '♔', name: 'Closer', desc: 'Win a Win the Endgame position', test: (p) => p.game.w >= 1 },
 ];
 
 /** Award any newly earned badges; returns them. */
@@ -186,10 +206,44 @@ export function recordRush(p: Progress, score: number, day: string, allowFreeze:
   return { best, badges: awardBadges(p, day) };
 }
 
-export function recordGame(p: Progress, outcome: 'win' | 'draw' | 'loss', day: string, allowFreeze: boolean): BadgeDef[] {
-  if (outcome === 'win') p.game.w++;
-  else if (outcome === 'draw') p.game.d++;
-  else p.game.l++;
+export function recordStreak(p: Progress, score: number, day: string, allowFreeze: boolean): { best: boolean; badges: BadgeDef[] } {
+  const log = dayLog(p, day);
+  const best = score > p.streakBest;
+  p.streakBest = Math.max(p.streakBest, score);
+  log.streak = Math.max(log.streak ?? 0, score);
+  if (score > 0) touchDay(p, day, allowFreeze);
+  return { best, badges: awardBadges(p, day) };
+}
+
+export function recordCoords(p: Progress, score: number, day: string, allowFreeze: boolean): { best: boolean; badges: BadgeDef[] } {
+  const log = dayLog(p, day);
+  const best = score > p.coordsBest;
+  p.coordsBest = Math.max(p.coordsBest, score);
+  log.coords = Math.max(log.coords ?? 0, score);
+  if (score > 0) touchDay(p, day, allowFreeze);
+  return { best, badges: awardBadges(p, day) };
+}
+
+/** `solves` holds the elapsed milliseconds of each solved puzzle; the best run becomes the ghost. */
+export function recordGhost(p: Progress, score: number, solves: number[], day: string, allowFreeze: boolean): { best: boolean; badges: BadgeDef[] } {
+  const log = dayLog(p, day);
+  const best = score > (p.ghost?.score ?? 0);
+  if (best) p.ghost = { score, solves };
+  log.ghost = Math.max(log.ghost ?? 0, score);
+  if (score > 0) touchDay(p, day, allowFreeze);
+  return { best, badges: awardBadges(p, day) };
+}
+
+export function recordLearn(p: Progress, id: string, day: string): BadgeDef[] {
+  p.learn[id] ??= day;
+  return awardBadges(p, day);
+}
+
+export function recordGame(p: Progress, outcome: 'win' | 'draw' | 'loss', day: string, allowFreeze: boolean, kind: 'endgame' | 'quick' = 'endgame'): BadgeDef[] {
+  const rec = kind === 'quick' ? p.quick : p.game;
+  if (outcome === 'win') rec.w++;
+  else if (outcome === 'draw') rec.d++;
+  else rec.l++;
   if (outcome !== 'loss') touchDay(p, day, allowFreeze);
   return awardBadges(p, day);
 }
@@ -217,7 +271,7 @@ export function accuracy(p: Progress): number {
 
 export async function loadProgress(): Promise<Progress> {
   const p = await load<Progress | null>(KEYS.progress, null);
-  return p ? { ...emptyProgress(), ...p } : emptyProgress();
+  return p ? { ...emptyProgress(), ...p, learn: { ...p.learn }, quick: { ...emptyProgress().quick, ...p.quick } } : emptyProgress();
 }
 
 export async function saveProgress(p: Progress): Promise<void> {

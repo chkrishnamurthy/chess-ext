@@ -1,4 +1,7 @@
+import { DRILLS } from '../../game/learn';
+import { LESSONS } from '../../game/lessons';
 import { allPuzzles } from '../../game/puzzles';
+import { THEMES, themesMastered } from '../../game/themes';
 import type { MateN } from '../../game/types';
 import { accuracy, BADGES, liveStreak, weeklyGrowth } from '../../progress/progress';
 import { exportData, importData, resetData } from '../../storage/backup';
@@ -65,8 +68,15 @@ export const progressScreen: Screen = (ctx, root) => {
       stat(`🔥 ${streak}`, `day streak · best ${p.streak.best}${ctx.settings.streakFreeze ? ` · ${p.streak.freezes ? '🧊 freeze ready' : 'no freeze'}` : ''}`, 'accent'),
       stat(total, 'puzzles solved'),
       stat(`${accuracy(p)}%`, 'first-try accuracy'),
-      stat(`⚡ ${p.rushBest}`, 'Puzzle Rush best'),
-      stat(`${p.game.w}/${p.game.d}/${p.game.l}`, 'Finish the Position W/D/L'),
+      stat(`⚡ ${p.rushBest}`, 'Rush best'),
+      stat(`🔥 ${p.streakBest}`, 'Streak best'),
+      stat(`🧭 ${p.coordsBest}`, 'Coordinates best'),
+      stat(`👻 ${p.ghost?.score ?? 0}`, 'Ghost Race best'),
+      stat(`${themesMastered(p.solved)}/${THEMES.length}`, 'patterns mastered'),
+      stat(`${Object.keys(p.learn).filter((k) => k.startsWith('lesson-')).length}/${LESSONS.length}`, 'endgame lessons won'),
+      stat(`${Object.keys(p.learn).filter((k) => k.startsWith('piece-')).length}/${DRILLS.length}`, 'piece drills done'),
+      stat(`${p.quick.w}/${p.quick.d}/${p.quick.l}`, 'Quick Game W/D/L'),
+      stat(`${p.game.w}/${p.game.d}/${p.game.l}`, 'Win the Endgame W/D/L'),
       ctx.settings.showRating ? stat(p.rating, 'puzzle rating (hidden by default)') : stat(p.mistakes.length, 'mistakes to retry'),
     ),
     h('div.card', null, h('h3', null, 'This week'), days, h('p', null, growth)),

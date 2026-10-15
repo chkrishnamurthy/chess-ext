@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
-  "name": "Chess Break — Checkmate Trainer",
+  "name": "Chess Break",
   "short_name": "Chess Break",
-  "version": "0.1.0",
-  "description": "Five-minute chess breaks: Mate in 1-2-3 puzzles, a daily challenge, Puzzle Rush and Finish the Position vs a local bot. Offline, no account.",
+  "version": "0.2.0",
+  "description": "Five-minute chess breaks: checkmate puzzles, Streak, Rush, a full game vs the computer, and lessons. Offline, no account.",
   "minimum_chrome_version": "116",
   "action": {
     "default_title": "Chess Break",

@@ -89,5 +89,11 @@ export const KEYS = {
   puzzle: 'cb.session.puzzle',
   game: 'cb.session.game',
   rush: 'cb.session.rush',
+  streak: 'cb.session.streak',
+  ghost: 'cb.session.ghost',
+  /** Last Quick Game setup (colour + level). */
+  quick: 'cb.quick',
   screen: 'cb.session.screen',
+  /** Which games' start sheets the user has already seen. */
+  seen: 'cb.seen',
 } as const;

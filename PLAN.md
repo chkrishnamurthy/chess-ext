@@ -1,4 +1,6 @@
 # Chess Break — Master Plan
+
+> **Status (v0.2.0):** the original modes and the later roadmap items are built: Mate in 1-2-3, Daily Puzzle, Rush, Win the Endgame, plus Ghost Race, Streak, Coordinates, Themes, Quick Game, Endgame Lessons and Learn the Pieces. The app is organised in four tabs (Today, Puzzles, Play, Progress); see `src/app/catalog.ts`. Still open: multiplayer (out of scope) and the monetization ideas in §15.
 *(Working name — final name TBD)*
 
 A self-contained chess trainer & game for short breaks, built as a Chrome extension.

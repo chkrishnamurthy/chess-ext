@@ -1,16 +1,26 @@
 import { getPuzzle, rushSequence } from '../../game/puzzles';
 import { newPuzzleState, PuzzleSession, type PuzzleState } from '../../game/puzzleSession';
-import { recordPuzzle, recordRush } from '../../progress/progress';
+import { recordGhost, recordPuzzle, recordRush } from '../../progress/progress';
 import { KEYS, load, save } from '../../storage/store';
 import { clear, h, toast } from '../../ui/dom';
 import { icon } from '../../ui/icons';
 import { celebrate, screenHeader, toolBtn } from '../kit';
+import { GAMES, type GameInfo } from '../catalog';
 import { play } from '../../ui/sound';
 import type { Screen } from '../context';
 import { PuzzleView } from '../puzzleView';
 
-const DURATION = 3 * 60 * 1000;
 const MAX_STRIKES = 3;
+
+/** Rush (3 min) and Ghost Race (90 s, with your best run as a ghost) share one screen. */
+interface RunConfig {
+  mode: 'rush' | 'ghost';
+  key: string;
+  game: GameInfo;
+  duration: number;
+}
+const RUSH: RunConfig = { mode: 'rush', key: KEYS.rush, game: GAMES.rush, duration: 3 * 60 * 1000 };
+const GHOST: RunConfig = { mode: 'ghost', key: KEYS.ghost, game: GAMES.ghost, duration: 90 * 1000 };
 
 /** Autosaved rush run. The clock pauses whenever the popup closes — no lost runs. */
 interface RushState {
@@ -23,15 +33,18 @@ interface RushState {
   status: 'ready' | 'running' | 'paused' | 'over';
   current?: PuzzleState;
   missed: string[];
+  /** Milliseconds into the run at which each puzzle was solved (the ghost timeline). */
+  solves?: number[];
   recorded?: boolean;
   newBest?: boolean;
+  beatGhost?: boolean;
 }
 
-function freshRun(): RushState {
+function freshRun(duration: number): RushState {
   const seed = String(Date.now());
   return {
     seed, ids: rushSequence(seed).map((p) => p.id), index: 0, score: 0, strikes: 0,
-    remainingMs: DURATION, status: 'ready', missed: [],
+    remainingMs: duration, status: 'ready', missed: [], solves: [],
   };
 }
 
@@ -40,16 +53,25 @@ const fmt = (ms: number) => {
   return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 };
 
-export const rushScreen: Screen = async (ctx, root) => {
-  let run = await load<RushState | null>(KEYS.rush, null);
+export const rushScreen: Screen = (ctx, root, r) => runScreen(RUSH)(ctx, root, r);
+export const ghostScreen: Screen = (ctx, root, r) => runScreen(GHOST)(ctx, root, r);
+
+const fmtLen = (ms: number) => (ms >= 120000 ? `${ms / 60000} minutes` : `${ms / 1000} seconds`);
+
+function runScreen(cfg: RunConfig): Screen {
+  return async (ctx, root) => {
+  const ghostMode = cfg.mode === 'ghost';
+  const bestScore = () => (ghostMode ? (ctx.progress.ghost?.score ?? 0) : ctx.progress.rushBest);
+  let run = await load<RushState | null>(cfg.key, null);
   // A finished run keeps its recap on screen, except on reopening: then start fresh.
-  if (!run || (run.status === 'over' && run.recorded && ctx.reopened)) run = freshRun();
+  if (!run || (run.status === 'over' && run.recorded && ctx.reopened)) run = freshRun(cfg.duration);
   if (run.status === 'running') run.status = 'paused';
 
   const timerEl = h('span.rush-timer');
   const scoreEl = h('span.rush-score');
   const strikesEl = h('span.strikes', { 'aria-label': 'Strikes' });
-  const bar = h('div.rush-bar', null, timerEl, scoreEl, strikesEl);
+  const ghostEl = h('span.ghost-count', { title: 'Your best run so far' });
+  const bar = h('div.rush-bar', null, timerEl, scoreEl, ghostMode ? ghostEl : null, strikesEl);
   const boardHost = h('div.board-card');
   const controls = h('div');
   const overlay = h('div');
@@ -57,18 +79,18 @@ export const rushScreen: Screen = async (ctx, root) => {
     'div.rush-intro',
     null,
     h('div.big-icon', null, icon('zap', 30)),
-    h('h2', null, 'Puzzle Rush'),
-    h('p', null, 'Solve as many checkmates as you can. They start easy and get harder.'),
+    h('h2', null, cfg.game.name),
+    h('p', null, ghostMode ? 'Solve as many checkmates as you can in 90 seconds. A ghost replays your best run so you can race it.' : 'Solve as many checkmates as you can. They start easy and get harder.'),
     h(
       'div.rush-rules',
       null,
-      h('span', null, '⏱ 3:00'),
+      h('span', null, `⏱ ${fmt(cfg.duration)}`),
       h('span', null, '✕ 3 strikes'),
-      h('span', null, `🏆 Best ${ctx.progress.rushBest}`),
+      h('span', null, `🏆 Best ${bestScore()}`),
     ),
     h('button.hero-cta', { onclick: () => begin() }, 'Start the clock', icon('play', 15)),
   );
-  root.append(screenHeader(ctx, 'Puzzle Rush', '3 minutes · 3 strikes'), intro, bar, boardHost, controls, overlay);
+  root.append(screenHeader(ctx, cfg.game.name, cfg.game.short, undefined, { family: cfg.game.family, back: { name: 'puzzles' }, backLabel: 'Back to Puzzles' }), intro, bar, boardHost, controls, overlay);
 
   let session: PuzzleSession | undefined;
   let tick: number | undefined;
@@ -79,6 +101,7 @@ export const rushScreen: Screen = async (ctx, root) => {
     onChange: () => persist(),
     onSolved: () => {
       run!.score += 1;
+      (run!.solves ??= []).push(Math.round(cfg.duration - run!.remainingMs));
       advance(350);
     },
     onWrong: (s) => {
@@ -103,7 +126,7 @@ export const rushScreen: Screen = async (ctx, root) => {
 
   function persist() {
     if (session) run!.current = session.state;
-    void save(KEYS.rush, run);
+    void save(cfg.key, run);
   }
 
   function renderBar() {
@@ -114,6 +137,14 @@ export const rushScreen: Screen = async (ctx, root) => {
     scoreEl.append(h('b', null, String(run!.score)), h('span', null, 'solved'));
     clear(strikesEl);
     for (let i = 0; i < MAX_STRIKES; i++) strikesEl.append(h('span', { class: i < run!.strikes ? 'on' : '' }, icon('x', 13)));
+    if (ghostMode) {
+      const ghost = ctx.progress.ghost;
+      const elapsed = cfg.duration - run!.remainingMs;
+      const n = ghost ? ghost.solves.filter((t) => t <= elapsed).length : 0;
+      ghostEl.hidden = !ghost;
+      ghostEl.textContent = `👻 ${n}`;
+      ghostEl.classList.toggle('ahead', run!.score >= n);
+    }
   }
 
   function loadPuzzle() {
@@ -189,10 +220,11 @@ export const rushScreen: Screen = async (ctx, root) => {
   function begin() {
     run!.status = 'running';
     clear(overlay);
+    renderControls(); // un-hides the board first, so it is measured at its real size
     loadPuzzle();
     startClock();
-    renderControls();
     persist();
+    requestAnimationFrame(() => view.board.refresh());
   }
 
   function pause() {
@@ -204,13 +236,13 @@ export const rushScreen: Screen = async (ctx, root) => {
   }
 
   function restart() {
-    run = freshRun();
+    run = freshRun(cfg.duration);
     session = undefined;
     clear(overlay);
     renderBar();
     renderControls();
     loadPuzzle();
-    view.setFeedback('Solve as many as you can in 3 minutes. Three strikes and you’re out.', 'info');
+    view.setFeedback(`Solve as many as you can in ${fmtLen(cfg.duration)}. Three strikes and you’re out.`, 'info');
   }
 
   async function end() {
@@ -225,13 +257,17 @@ export const rushScreen: Screen = async (ctx, root) => {
       run!.recorded = true;
       const p = ctx.progress;
       const today = ctx.today();
-      const prevToday = p.days[today]?.rush ?? 0;
+      const prevToday = (ghostMode ? p.days[today]?.ghost : p.days[today]?.rush) ?? 0;
       for (const id of run!.missed) {
         const pz = getPuzzle(id);
         if (pz) recordPuzzle(p, { puzzle: pz, solved: false, firstTry: false, rush: true }, today, ctx.settings.streakFreeze);
       }
-      const { best, badges } = recordRush(p, run!.score, today, ctx.settings.streakFreeze);
-      run!.newBest = best;
+      const prevGhost = p.ghost?.score ?? 0;
+      const { best, badges } = ghostMode
+        ? recordGhost(p, run!.score, run!.solves ?? [], today, ctx.settings.streakFreeze)
+        : recordRush(p, run!.score, today, ctx.settings.streakFreeze);
+      run!.newBest = best && run!.score > 0;
+      if (ghostMode) run!.beatGhost = run!.score > prevGhost && prevGhost > 0;
       if (!best && run!.score > prevToday && prevToday > 0) toast('New best for today!', 'good');
       await ctx.saveProgress();
       for (const b of badges) toast(`${b.icon} Badge unlocked: ${b.name}`, 'good', 3200);
@@ -244,7 +280,7 @@ export const rushScreen: Screen = async (ctx, root) => {
   function renderOver() {
     clear(overlay);
     const p = ctx.progress;
-    const todayBest = p.days[ctx.today()]?.rush ?? run!.score;
+    const todayBest = (ghostMode ? p.days[ctx.today()]?.ghost : p.days[ctx.today()]?.rush) ?? run!.score;
     const r = run!;
     overlay.append(
       h(
@@ -258,7 +294,7 @@ export const rushScreen: Screen = async (ctx, root) => {
             'div',
             null,
             h('h2', null, r.newBest ? 'New personal best!' : r.remainingMs <= 0 ? 'Time’s up!' : 'Run over'),
-            h('p', null, `Today’s best ${todayBest} · All-time best ${p.rushBest}`),
+            h('p', null, r.beatGhost ? 'You beat your ghost! A new ghost is saved.' : `Today’s best ${todayBest} · All-time best ${bestScore()}`),
           ),
         ),
         h('div.big-score.pop', null, String(r.score)),
@@ -267,12 +303,12 @@ export const rushScreen: Screen = async (ctx, root) => {
           ? h('p', { style: 'color:var(--muted)' }, `🔁 ${r.missed.length} missed puzzle${r.missed.length === 1 ? ' was' : 's were'} added to “Retry mistakes”.`)
           : r.score > 0
             ? h('p', { style: 'color:var(--muted)' }, 'No strikes — flawless! ✨')
-            : h('p', { style: 'color:var(--muted)' }, 'Ended early — give it the full three minutes next time!'),
+            : h('p', { style: 'color:var(--muted)' }, 'Ended early — give it the full time next time!'),
         h(
           'div.btn-row',
           null,
           h('button.btn.primary', { onclick: () => { restart(); begin(); } }, icon('zap', 16), 'Play again'),
-          h('button.btn', { onclick: () => ctx.go({ name: 'home' }) }, icon('home', 16), 'Home'),
+          h('button.btn', { onclick: () => ctx.go({ name: 'puzzles' }) }, icon('home', 16), 'Puzzles'),
         ),
       ),
     );
@@ -287,7 +323,7 @@ export const rushScreen: Screen = async (ctx, root) => {
     renderOver();
   } else {
     loadPuzzle();
-    if (run.status === 'ready') view.setFeedback('Solve as many as you can in 3 minutes. Three strikes and you’re out.', 'info');
+    if (run.status === 'ready') view.setFeedback(`Solve as many as you can in ${fmtLen(cfg.duration)}. Three strikes and you’re out.`, 'info');
     else view.setFeedback('Paused — the clock stops while you’re away.', 'info');
   }
 
@@ -309,4 +345,5 @@ export const rushScreen: Screen = async (ctx, root) => {
     },
     onSettings: (s) => view.applySettings(s),
   };
-};
+  };
+}

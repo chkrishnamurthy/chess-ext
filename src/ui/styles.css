@@ -1475,3 +1475,350 @@ body.overlay {
   opacity: 0;
   transform: translateY(-6px);
 }
+
+/* ---------- game families, hubs and the start sheet ---------- */
+:root {
+  --fam-puzzle: #2e62b3;
+  --fam-puzzle-soft: #e1ebfa;
+  --fam-timed: #b36a12;
+  --fam-timed-soft: #fff0d6;
+  --fam-bot: #1a8a4f;
+  --fam-bot-soft: #e3f6eb;
+  --fam-learn: #7a4aa6;
+  --fam-learn-soft: #efe5f8;
+}
+:root[data-theme='dark'] {
+  --fam-puzzle: #8fb4f0;
+  --fam-puzzle-soft: #1f2f4a;
+  --fam-timed: #f0b25a;
+  --fam-timed-soft: #44331a;
+  --fam-bot: #5fc088;
+  --fam-bot-soft: #1f3a2b;
+  --fam-learn: #c9a3ec;
+  --fam-learn-soft: #35264a;
+}
+.fam {
+  --c: var(--fam-puzzle);
+  --cs: var(--fam-puzzle-soft);
+  display: inline-block;
+  font-size: 0.66em;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 8px;
+  border-radius: 6px;
+  white-space: nowrap;
+  color: var(--c);
+  background: var(--cs);
+}
+.fam.timed {
+  --c: var(--fam-timed);
+  --cs: var(--fam-timed-soft);
+}
+.fam.bot {
+  --c: var(--fam-bot);
+  --cs: var(--fam-bot-soft);
+}
+.fam.learn {
+  --c: var(--fam-learn);
+  --cs: var(--fam-learn-soft);
+}
+.hero .fam {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.22);
+  margin-left: 4px;
+}
+.head-text .fam {
+  margin-bottom: 3px;
+}
+
+.hub-head h1 {
+  margin: 0;
+  font-size: 1.35em;
+  font-weight: 850;
+}
+.hub-head p {
+  margin: 2px 0 0;
+  color: var(--muted);
+}
+.hub-group {
+  display: contents;
+}
+
+.game-row {
+  --c: var(--fam-puzzle);
+  --cs: var(--fam-puzzle-soft);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: var(--r);
+  padding: 10px 12px;
+  cursor: pointer;
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.15s var(--ease), box-shadow 0.15s, border-color 0.15s;
+}
+.game-row.timed {
+  --c: var(--fam-timed);
+  --cs: var(--fam-timed-soft);
+}
+.game-row.bot {
+  --c: var(--fam-bot);
+  --cs: var(--fam-bot-soft);
+}
+.game-row.learn {
+  --c: var(--fam-learn);
+  --cs: var(--fam-learn-soft);
+}
+.game-row:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--c) 45%, transparent);
+  box-shadow: var(--shadow);
+}
+.game-ic {
+  width: 40px;
+  height: 40px;
+  border-radius: 13px;
+  display: grid;
+  place-items: center;
+  color: var(--c);
+  background: var(--cs);
+  flex: none;
+}
+.game-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  min-width: 0;
+}
+.game-text strong {
+  font-weight: 850;
+}
+.game-text span:not(.fam) {
+  color: var(--muted);
+  font-size: 0.85em;
+}
+.game-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  flex: none;
+}
+.game-meta em {
+  font-style: normal;
+  font-size: 0.75em;
+  color: var(--faint);
+  font-weight: 750;
+}
+.resume-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  border: 1px solid var(--fam-bot);
+  background: var(--fam-bot-soft);
+  border-radius: var(--r);
+  padding: 10px 12px;
+  color: var(--text);
+}
+.resume-card .mini-board {
+  width: 64px;
+  flex: none;
+}
+.time-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.time-seg {
+  align-self: flex-start;
+}
+
+.sheet-scrim {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  background: rgba(10, 16, 13, 0.5);
+}
+.sheet {
+  width: 100%;
+  max-width: 560px;
+  background: var(--surface);
+  color: var(--text);
+  border-radius: 20px 20px 0 0;
+  padding: 18px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+  box-shadow: var(--shadow);
+  animation: screen-in 0.2s var(--ease);
+}
+.sheet h2 {
+  margin: 0;
+  font-size: 1.3em;
+}
+.sheet p {
+  margin: 0;
+}
+.sheet .btn {
+  width: 100%;
+  justify-content: center;
+}
+.sheet-facts {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  width: 100%;
+}
+.sheet-facts div {
+  background: var(--surface-2);
+  border-radius: 10px;
+  padding: 7px 9px;
+  display: flex;
+  flex-direction: column;
+}
+.sheet-facts small {
+  font-size: 0.68em;
+  font-weight: 850;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--faint);
+}
+.sheet-facts b {
+  font-size: 0.88em;
+}
+
+/* ---------- Quick Game setup, Coordinates ---------- */
+.level-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 6px;
+}
+.level-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  padding: 8px 2px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font: inherit;
+}
+.level-btn b {
+  font-size: 1.15em;
+}
+.level-btn span {
+  font-size: 0.66em;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.15;
+}
+.level-btn[aria-pressed='true'] {
+  background: var(--fam-bot);
+  border-color: var(--fam-bot);
+  color: #fff;
+}
+.level-btn[aria-pressed='true'] span {
+  color: inherit;
+  opacity: 0.9;
+}
+.level-hint {
+  margin: 0;
+  color: var(--muted);
+}
+.coord-target {
+  text-align: center;
+  font-size: 2.6em;
+  font-weight: 900;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  min-height: 1em;
+  color: var(--fam-timed);
+}
+.time-seg button {
+  white-space: nowrap;
+}
+.resume-card .mini-board {
+  width: 64px;
+  height: 64px;
+  transform: none;
+}
+.grid-2 > .accent {
+  grid-column: 1 / -1;
+}
+.rush-bar .coord-target {
+  font-size: 1.9em;
+  min-height: 0;
+}
+
+/* ---------- Themes, lessons, piece drills, Ghost Race ---------- */
+.theme-row {
+  --c: var(--fam-learn);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--line);
+  background: var(--surface);
+  border-radius: var(--r);
+  padding: 10px 12px;
+  cursor: pointer;
+  color: var(--text);
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.15s var(--ease), border-color 0.15s;
+}
+.theme-row:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--c) 45%, transparent);
+}
+.theme-row.done {
+  border-color: color-mix(in srgb, var(--fam-bot) 55%, transparent);
+}
+.theme-meter {
+  flex: none;
+  min-width: 54px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 4px;
+  font-size: 0.82em;
+  color: var(--c);
+}
+.theme-meter .mate-bar {
+  --c: var(--fam-learn);
+  width: 54px;
+  height: 5px;
+}
+.theme-row.done .theme-meter {
+  color: var(--fam-bot);
+}
+.lesson-steps {
+  margin: 4px 0 8px;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.ghost-count {
+  font-weight: 850;
+  color: var(--muted);
+}
+.ghost-count.ahead {
+  color: var(--good);
+}

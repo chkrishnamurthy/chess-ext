@@ -9,7 +9,9 @@ import type { Puzzle } from './types';
  */
 export interface PuzzleState {
   puzzleId: string;
-  mode: 'practice' | 'daily' | 'rush' | 'retry';
+  mode: 'practice' | 'daily' | 'rush' | 'retry' | 'theme';
+  /** Set in theme mode: the pattern being practised. */
+  theme?: string;
   /** Moves played so far from the puzzle FEN (solver, defender, …). */
   played: string[];
   status: 'playing' | 'solved' | 'revealed';
@@ -30,8 +32,8 @@ export type MoveVerdict =
   | { kind: 'mate'; san: string }
   | { kind: 'good'; san: string; reply: string; replySan: string };
 
-export function newPuzzleState(p: Puzzle, mode: PuzzleState['mode']): PuzzleState {
-  return { puzzleId: p.id, mode, played: [], status: 'playing', mistakes: 0, hintLevel: 0 };
+export function newPuzzleState(p: Puzzle, mode: PuzzleState['mode'], theme?: string): PuzzleState {
+  return { puzzleId: p.id, mode, played: [], status: 'playing', mistakes: 0, hintLevel: 0, ...(theme ? { theme } : {}) };
 }
 
 export class PuzzleSession {

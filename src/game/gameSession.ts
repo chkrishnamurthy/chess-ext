@@ -16,6 +16,8 @@ export interface GameState {
   moves: string[];
   userColor: 'w' | 'b';
   level: BotLevel;
+  /** Quick Game only: strength 1-8 (overrides `level`). */
+  quickLevel?: number;
   result?: GameResult;
   startedAt: number;
   recorded?: boolean;
@@ -24,6 +26,16 @@ export interface GameState {
 export function newGameState(positionId: string, fen: string, level: BotLevel): GameState {
   return { positionId, startFen: fen, moves: [], userColor: fen.split(' ')[1] as 'w' | 'b', level, startedAt: Date.now() };
 }
+
+export const START_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1';
+export const QUICK_ID = 'quick';
+
+/** A full game from the starting position against the computer. */
+export function newQuickState(color: 'w' | 'b', quickLevel: number): GameState {
+  return { positionId: QUICK_ID, startFen: START_FEN, moves: [], userColor: color, level: 'intermediate', quickLevel, startedAt: Date.now() };
+}
+
+export const isQuick = (s: Pick<GameState, 'positionId'>) => s.positionId === QUICK_ID;
 
 export class GameSession {
   readonly chess: Chess;

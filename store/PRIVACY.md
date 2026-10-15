@@ -1,6 +1,6 @@
 # Chess Break — Privacy Policy
 
-_Last updated: 2026-09-25_
+_Last updated: 2026-10-15_
 
 Chess Break does **not** collect, transmit, sell or share any personal data.
 

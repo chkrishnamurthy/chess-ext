@@ -1,17 +1,97 @@
 import { Chessground } from '@lichess-org/chessground';
+import { KEYS, load, save } from '../storage/store';
 import { h } from '../ui/dom';
 import { icon, type IconName } from '../ui/icons';
-import type { Ctx } from './context';
+import { FAMILY_LABEL, GAMES, type Family, type GameId, type GameInfo } from './catalog';
+import type { Ctx, Route } from './context';
 
-/** Screen title bar: back arrow, title/subtitle, optional trailing element. */
-export function screenHeader(ctx: Ctx, title: string, sub?: string | Node, right?: Node): HTMLElement {
+/** Coloured tag that says what kind of game this is: Puzzle, Timed, Vs computer, Learn. */
+export function familyTag(family: Family): HTMLElement {
+  return h('span.fam', { class: family }, FAMILY_LABEL[family]);
+}
+
+/**
+ * Screen title bar: back arrow, title/subtitle, optional trailing element.
+ * `family` adds the game-type tag above the title; `back` sets where the arrow goes
+ * (the hub the game belongs to, Today by default).
+ */
+export function screenHeader(
+  ctx: Ctx,
+  title: string,
+  sub?: string | Node,
+  right?: Node,
+  opts: { family?: Family; back?: Route; backLabel?: string } = {},
+): HTMLElement {
+  const label = opts.backLabel ?? 'Back to Today';
   return h(
     'div.screen-head',
     null,
-    h('button.back', { onclick: () => ctx.go({ name: 'home' }), 'aria-label': 'Back to home', title: 'Home' }, icon('back', 18)),
-    h('div.head-text', null, h('h1', null, title), sub ? h('div.head-sub', null, sub) : null),
+    h('button.back', { onclick: () => ctx.go(opts.back ?? { name: 'home' }), 'aria-label': label, title: label }, icon('back', 18)),
+    h('div.head-text', null, opts.family ? familyTag(opts.family) : null, h('h1', null, title), sub ? h('div.head-sub', null, sub) : null),
     right ?? null,
   );
+}
+
+/** A game as a tappable row: icon, name, one-line description, family tag and time. */
+export function gameRow(game: GameInfo, onclick: () => void, sub?: string): HTMLElement {
+  return h(
+    'button.game-row',
+    { class: game.family, onclick },
+    h('span.game-ic', null, icon(game.icon, 20)),
+    h('span.game-text', null, h('strong', null, game.name), h('span', null, sub ?? game.short)),
+    h('span.game-meta', null, familyTag(game.family), h('em', null, game.time)),
+  );
+}
+
+const SHEETED: GameId[] = ['daily', 'm1', 'm2', 'm3', 'retry', 'streak', 'coords'];
+
+/**
+ * Opens a game. The first time, a short sheet explains the rule, length and goal;
+ * after that it is one tap. Rush, Win the Endgame and Quick Game already open on their own intro or setup.
+ */
+export async function launch(ctx: Ctx, id: GameId, route: Route): Promise<void> {
+  const seen = await load<Partial<Record<GameId, true>>>(KEYS.seen, {});
+  if (!SHEETED.includes(id) || seen[id]) return ctx.go(route);
+  const g = GAMES[id];
+  const close = () => {
+    sheet.remove();
+    document.removeEventListener('keydown', onKey);
+  };
+  const onKey = (e: KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      close();
+    }
+  };
+  const start = h(
+    'button.btn.primary',
+    {
+      onclick: () => {
+        close();
+        void save(KEYS.seen, { ...seen, [id]: true });
+        ctx.go(route);
+      },
+    },
+    'Start',
+    icon('play', 14),
+  );
+  const sheet = h(
+    'div.sheet-scrim',
+    { onclick: (e: Event) => e.target === sheet && close() },
+    h(
+      'div.sheet',
+      { role: 'dialog', 'aria-modal': 'true', 'aria-label': g.name },
+      familyTag(g.family),
+      h('h2', null, g.name),
+      h('p', null, g.rule),
+      h('div.sheet-facts', null, h('div', null, h('small', null, 'Time'), h('b', null, g.time)), h('div', null, h('small', null, 'Goal'), h('b', null, g.goal)), h('div', null, h('small', null, 'Clock'), h('b', null, g.family === 'timed' ? 'Yes' : 'No'))),
+      start,
+      h('button.btn.ghost', { onclick: close }, 'Not now'),
+    ),
+  );
+  document.addEventListener('keydown', onKey);
+  document.body.append(sheet);
+  start.focus();
 }
 
 /** Button with an icon above a short label (used in the board toolbars). */

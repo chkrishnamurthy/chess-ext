@@ -1,5 +1,6 @@
 import { explain } from '../../game/explain';
 import { allPuzzles, dailyPuzzle, getPuzzle, nextPuzzle, TIER_LABEL, TIERS } from '../../game/puzzles';
+import { MASTER_AT, themeName, themeSolved } from '../../game/themes';
 import { newPuzzleState, PuzzleSession, type PuzzleState } from '../../game/puzzleSession';
 import type { Puzzle, Tier } from '../../game/types';
 import { liveStreak, recordPuzzle } from '../../progress/progress';
@@ -18,6 +19,10 @@ function choosePuzzle(ctx: Ctx, route: PuzzleRoute, excludeId?: string): Puzzle 
   if (route.mode === 'retry') return p.mistakes.map(getPuzzle).find((x) => x && x.id !== excludeId) ?? undefined;
   const exclude = new Set(Object.keys(p.solved));
   if (excludeId) exclude.add(excludeId);
+  if (route.mode === 'theme') {
+    const pick = nextPuzzle({ theme: route.theme, exclude, rating: p.rating, seed: ctx.today() });
+    return pick ?? nextPuzzle({ theme: route.theme, exclude: new Set(excludeId ? [excludeId] : []), rating: p.rating, seed: String(Date.now()) });
+  }
   const pick = nextPuzzle({ n: route.n, tier: route.tier ?? 'all', exclude, rating: p.rating, seed: ctx.today() });
   // Everything in this bucket solved: start over with ones solved longest ago rather than stopping.
   return pick ?? nextPuzzle({ n: route.n, tier: route.tier ?? 'all', exclude: new Set(excludeId ? [excludeId] : []), rating: p.rating, seed: String(Date.now()) });
@@ -37,7 +42,9 @@ export const puzzleScreen: Screen = async (ctx, root, r) => {
         ? saved.puzzleId === dailyPuzzle(ctx.today()).id
         : route.mode === 'retry'
           ? true
-          : savedPuzzle.n === route.n && (!route.tier || route.tier === 'all' || savedPuzzle.tier === route.tier);
+          : route.mode === 'theme'
+            ? saved.theme === route.theme
+            : savedPuzzle.n === route.n && (!route.tier || route.tier === 'all' || savedPuzzle.tier === route.tier);
     if (matches) {
       puzzle = savedPuzzle;
       state = saved;
@@ -62,11 +69,11 @@ export const puzzleScreen: Screen = async (ctx, root, r) => {
     if (!puzzle) {
       root.append(
         h('div.card', null, h('h3', null, 'All clear! 🎉'), h('p', null, 'No mistakes left to retry. Nice work.')),
-        h('button.btn.primary', { onclick: () => ctx.go({ name: 'home' }) }, 'Back home'),
+        h('button.btn.primary', { onclick: () => ctx.go({ name: 'puzzles' }) }, 'Back to Puzzles'),
       );
       return {};
     }
-    state = newPuzzleState(puzzle, route.mode);
+    state = newPuzzleState(puzzle, route.mode, route.mode === 'theme' ? route.theme : undefined);
   }
 
   const header = h('div');
@@ -96,7 +103,7 @@ export const puzzleScreen: Screen = async (ctx, root, r) => {
   function renderHeader() {
     const p = session.puzzle;
     const color = session.solverColor();
-    const title = route.mode === 'daily' ? 'Today’s challenge' : route.mode === 'retry' ? 'Retry a mistake' : `Mate in ${p.n}`;
+    const title = route.mode === 'daily' ? 'Daily Puzzle' : route.mode === 'retry' ? 'Retry a mistake' : route.mode === 'theme' ? themeName(route.theme) : `Mate in ${p.n}`;
     clear(header);
     header.append(
       screenHeader(
@@ -108,8 +115,12 @@ export const puzzleScreen: Screen = async (ctx, root, r) => {
           h('span.turn-pill', null, h('span.turn-dot', { class: color }), `${color === 'white' ? 'White' : 'Black'} to move`),
           h('span.chip', { class: p.tier }, TIER_LABEL[p.tier]),
           route.mode === 'practice' ? '' : `Mate in ${p.n}`,
+          route.mode === 'theme' ? ` · ${Math.min(MASTER_AT, themeSolved(ctx.progress.solved, route.theme))}/${MASTER_AT} to master` : '',
         ),
         route.mode === 'practice' ? tierSelect : undefined,
+        route.mode === 'theme'
+          ? { family: 'learn', back: { name: 'themes' }, backLabel: 'Back to Themes' }
+          : { family: 'puzzle', back: { name: 'puzzles' }, backLabel: 'Back to Puzzles' },
       ),
     );
   }
@@ -205,6 +216,7 @@ export const puzzleScreen: Screen = async (ctx, root, r) => {
         ctx.settings.streakFreeze,
       );
       await ctx.saveProgress();
+      if (route.mode === 'theme' && solved && themeSolved(ctx.progress.solved, route.theme) === MASTER_AT) toast(`🎓 ${themeName(route.theme)} mastered!`, 'good', 3200);
       for (const b of badges) toast(`${b.icon} Badge unlocked: ${b.name}`, 'good', 3200);
     }
     await save(KEYS.puzzle, session.state);
@@ -216,7 +228,7 @@ export const puzzleScreen: Screen = async (ctx, root, r) => {
     const nextRoute: PuzzleRoute = route.mode === 'daily' ? { name: 'puzzle', mode: 'practice', n: session.puzzle.n } : route;
     const pz = choosePuzzle(ctx, nextRoute, session.puzzle.id);
     if (!pz) {
-      ctx.go({ name: 'home' });
+      ctx.go({ name: 'puzzles' });
       return;
     }
     if (nextRoute !== route) {
@@ -224,7 +236,7 @@ export const puzzleScreen: Screen = async (ctx, root, r) => {
       void save(KEYS.puzzle, newPuzzleState(pz, 'practice')).then(() => ctx.go(nextRoute));
       return;
     }
-    session = new PuzzleSession(pz, newPuzzleState(pz, route.mode));
+    session = new PuzzleSession(pz, newPuzzleState(pz, route.mode, route.mode === 'theme' ? route.theme : undefined));
     void save(KEYS.puzzle, session.state);
     clear(after);
     renderHeader();

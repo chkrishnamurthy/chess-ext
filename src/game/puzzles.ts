@@ -59,6 +59,8 @@ export function dailyPuzzle(day: string): Puzzle {
 export interface PickOptions {
   n?: MateN;
   tier?: Tier | 'all';
+  /** Only puzzles tagged with this theme (e.g. 'fork'). */
+  theme?: string;
   exclude: Set<string>;
   /** Target rating for adaptive-ish ordering; puzzles closest to it come first. */
   rating?: number;
@@ -71,7 +73,7 @@ export interface PickOptions {
  */
 export function nextPuzzle(o: PickOptions): Puzzle | undefined {
   const match = (p: Puzzle) =>
-    (!o.n || p.n === o.n) && (!o.tier || o.tier === 'all' || p.tier === o.tier) && !o.exclude.has(p.id);
+    (!o.n || p.n === o.n) && (!o.theme || p.themes.includes(o.theme)) && (!o.tier || o.tier === 'all' || p.tier === o.tier) && !o.exclude.has(p.id);
   const cur = (curated as Puzzle[]).find(match);
   if (cur) return cur;
   const pool = ALL.filter(match);
@@ -81,6 +83,34 @@ export function nextPuzzle(o: PickOptions): Puzzle | undefined {
   return pool
     .map((p) => ({ p, score: Math.abs(p.rating - target) + (hash(seed + p.id) % 300) }))
     .reduce((a, b) => (b.score < a.score ? b : a)).p;
+}
+
+/**
+ * Streak sequence: no clock, so it climbs steadily from very easy to hard. Each step takes
+ * the unused Mate in 1-3 puzzle closest to a rising rating target (with a seeded wobble so
+ * two runs differ).
+ */
+export function streakSequence(seed: string, count = 100): Puzzle[] {
+  const pool = ALL.filter((p) => p.tier !== 'tricky');
+  const used = new Set<string>();
+  const out: Puzzle[] = [];
+  for (let i = 0; i < count; i++) {
+    const target = 800 + i * 12;
+    let best: Puzzle | undefined;
+    let bestScore = Infinity;
+    for (const p of pool) {
+      if (used.has(p.id)) continue;
+      const score = Math.abs(p.rating - target) + (hash(seed + p.id) % 150);
+      if (score < bestScore) {
+        bestScore = score;
+        best = p;
+      }
+    }
+    if (!best) break;
+    used.add(best.id);
+    out.push(best);
+  }
+  return out;
 }
 
 /** Puzzle Rush sequence: rising difficulty, mostly short mates so the clock matters. */

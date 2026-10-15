@@ -5,11 +5,21 @@ import type { Settings } from '../storage/settings';
 
 export type Route =
   | { name: 'home' }
+  | { name: 'puzzles' }
+  | { name: 'play' }
   | { name: 'puzzle'; mode: 'practice'; n: MateN; tier?: Tier | 'all' }
   | { name: 'puzzle'; mode: 'daily' }
   | { name: 'puzzle'; mode: 'retry' }
+  | { name: 'puzzle'; mode: 'theme'; theme: string }
   | { name: 'rush' }
-  | { name: 'game'; positionId?: string; fresh?: boolean }
+  | { name: 'ghost' }
+  | { name: 'streak' }
+  | { name: 'themes' }
+  | { name: 'lessons' }
+  | { name: 'learn'; piece?: string }
+  | { name: 'coords' }
+  | { name: 'quick' }
+  | { name: 'game'; positionId?: string; fresh?: boolean; quick?: { color: 'w' | 'b'; level: number } }
   | { name: 'progress' };
 
 export interface Ctx {

@@ -13,14 +13,31 @@ import { OVERLAY_CLOSE, OVERLAY_CLOSED, OVERLAY_OPENED, OVERLAY_OPENING } from '
 import { openOptions } from './nav';
 import { gameScreen } from './screens/game';
 import { homeScreen } from './screens/home';
+import { coordsScreen } from './screens/coords';
+import { learnScreen } from './screens/learn';
+import { lessonsScreen } from './screens/lessons';
+import { playScreen } from './screens/play';
 import { progressScreen } from './screens/progress';
 import { puzzleScreen } from './screens/puzzle';
-import { rushScreen } from './screens/rush';
+import { puzzlesScreen } from './screens/puzzles';
+import { quickScreen } from './screens/quick';
+import { streakScreen } from './screens/streak';
+import { themesScreen } from './screens/themes';
+import { ghostScreen, rushScreen } from './screens/rush';
 
 const SCREENS: Record<Route['name'], Screen> = {
   home: homeScreen,
+  puzzles: puzzlesScreen,
+  play: playScreen,
   puzzle: puzzleScreen,
   rush: rushScreen,
+  ghost: ghostScreen,
+  streak: streakScreen,
+  themes: themesScreen,
+  lessons: lessonsScreen,
+  learn: learnScreen,
+  coords: coordsScreen,
+  quick: quickScreen,
   game: gameScreen,
   progress: progressScreen,
 };
@@ -65,7 +82,7 @@ export async function startApp(surface: Ctx['surface']): Promise<void> {
   const top = h(
     'header.topbar',
     null,
-    h('button.brand', { onclick: () => ctx.go({ name: 'home' }), title: 'Home' }, h('img', { src: 'icons/icon-32.png', alt: '' }), h('span', null, 'Chess Break')),
+    h('button.brand', { onclick: () => ctx.go({ name: 'home' }), title: 'Today' }, h('img', { src: 'icons/icon-32.png', alt: '' }), h('span', null, 'Chess Break')),
     h('span.spacer'),
     streakEl,
     kbdBtn,
@@ -74,12 +91,12 @@ export async function startApp(surface: Ctx['surface']): Promise<void> {
     surface === 'overlay' ? h('button.icon-btn', { title: 'Close (Esc)', 'aria-label': 'Close Chess Break', onclick: () => requestClose() }, icon('x')) : '',
   );
 
-  // Bottom tab bar: every mode is one tap away.
+  // Bottom tab bar: four categories. A game lives in exactly one of them.
   const TABS: { name: Route['name']; label: string; icon: IconName; route: Route }[] = [
-    { name: 'home', label: 'Home', icon: 'home', route: { name: 'home' } },
-    { name: 'rush', label: 'Rush', icon: 'zap', route: { name: 'rush' } },
-    { name: 'game', label: 'Play', icon: 'crown', route: { name: 'game' } },
-    { name: 'progress', label: 'Stats', icon: 'chart', route: { name: 'progress' } },
+    { name: 'home', label: 'Today', icon: 'home', route: { name: 'home' } },
+    { name: 'puzzles', label: 'Puzzles', icon: 'target', route: { name: 'puzzles' } },
+    { name: 'play', label: 'Play', icon: 'crown', route: { name: 'play' } },
+    { name: 'progress', label: 'Progress', icon: 'chart', route: { name: 'progress' } },
   ];
   const tabButtons = new Map<Route['name'], HTMLButtonElement>();
   const nav = h('nav.tabbar', { 'aria-label': 'Main' });
@@ -89,7 +106,12 @@ export async function startApp(surface: Ctx['surface']): Promise<void> {
     nav.append(b);
   }
   function setActiveTab(name: Route['name']) {
-    const active = name === 'puzzle' ? 'home' : name;
+    // Game screens highlight the tab they belong to.
+    const active = name === 'puzzle' || name === 'rush' || name === 'ghost' || name === 'streak' || name === 'coords' || name === 'themes'
+        ? 'puzzles'
+        : name === 'game' || name === 'quick' || name === 'lessons' || name === 'learn'
+          ? 'play'
+          : name;
     for (const [n, b] of tabButtons) {
       b.classList.toggle('active', n === active);
       if (n === active) b.setAttribute('aria-current', 'page');
@@ -173,7 +195,7 @@ export async function startApp(surface: Ctx['surface']): Promise<void> {
   async function resume() {
     shown = false; // the next screen counts as a reopen (see ctx.reopened)
     const last = await load<Route>(KEYS.screen, { name: 'home' });
-    const resumable = last.name === 'puzzle' || last.name === 'rush' || last.name === 'game';
+    const resumable = last.name === 'puzzle' || last.name === 'rush' || last.name === 'ghost' || last.name === 'streak' || last.name === 'game';
     await show(resumable ? last : { name: 'home' });
   }
 

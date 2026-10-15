@@ -104,6 +104,11 @@ export class Board {
     if (!animate) this.cg.set({ animation: { enabled: !prefersReducedMotion(this.settings) } });
   }
 
+  /** Re-measure and redraw, e.g. after the board was shown again from a hidden (zero-size) state. */
+  refresh(): void {
+    this.cg.redrawAll();
+  }
+
   flip(): void {
     this.flipped = !this.flipped;
     this.cg.toggleOrientation();

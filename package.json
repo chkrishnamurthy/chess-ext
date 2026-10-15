@@ -1,6 +1,6 @@
 {
   "name": "chess-break",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "description": "Chess Break — a chess trainer & game for short breaks. Chrome extension, offline, no account.",
   "license": "GPL-3.0-or-later",
@@ -16,7 +16,8 @@
     "lichess-import": "node --import tsx scripts/lichess-import.ts",
     "build-curated": "node --import tsx scripts/build-curated.ts",
     "icons": "node --import tsx scripts/make-icons.ts",
-    "release": "npm run verify-puzzles && npm test && npm run build && cd dist && rm -f ../chess-break.zip && zip -qr ../chess-break.zip . && echo \"packaged chess-break.zip\"",
+    "package": "node --import tsx scripts/package.ts",
+    "release": "npm run verify-puzzles && npm test && npm run build && npm run package",
     "engine": "cp node_modules/stockfish/bin/stockfish-19-lite-single.js public/engine/stockfish.js && cp node_modules/stockfish/bin/stockfish-19-lite-single.wasm public/engine/stockfish.wasm && cp node_modules/stockfish/Copying.txt public/engine/COPYING.txt"
   },
   "dependencies": {

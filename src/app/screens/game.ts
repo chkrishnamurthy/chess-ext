@@ -1,6 +1,6 @@
 import positionsJson from '../../data/positions.json';
-import { LEVEL_LABEL } from '../../engine/engine';
-import { GameSession, newGameState, RESULT_TEXT, type BotLevel, type GameState } from '../../game/gameSession';
+import { LEVEL_LABEL, QUICK_LEVEL_NAME } from '../../engine/engine';
+import { GameSession, isQuick, newGameState, newQuickState, RESULT_TEXT, type BotLevel, type GameState } from '../../game/gameSession';
 import { TIER_LABEL } from '../../game/puzzles';
 import type { FinishPosition } from '../../game/types';
 import { recordGame } from '../../progress/progress';
@@ -9,12 +9,23 @@ import { KEYS, load, save } from '../../storage/store';
 import { Board } from '../../ui/board';
 import { announce, clear, h, toast } from '../../ui/dom';
 import { icon } from '../../ui/icons';
+import { GAMES } from '../catalog';
+import { LESSONS } from '../../game/lessons';
+import { recordLearn } from '../../progress/progress';
 import { celebrate, miniBoard, screenHeader, toolBtn } from '../kit';
 import { play } from '../../ui/sound';
 import { openSidePanel } from '../nav';
 import type { Ctx, Route, Screen, ScreenHandle } from '../context';
 
 export const POSITIONS = positionsJson as FinishPosition[];
+
+/** Win the Endgame positions plus the guided lessons. */
+export const ALL_POSITIONS: FinishPosition[] = [...POSITIONS, ...LESSONS];
+
+/** Name shown for a saved game: the position's title, or "Quick Game". */
+export function gameTitle(state: Pick<GameState, 'positionId'>): string {
+  return isQuick(state) ? GAMES.quick.name : (ALL_POSITIONS.find((p) => p.id === state.positionId)?.title ?? GAMES.endgame.name);
+}
 
 type GameRoute = Extract<Route, { name: 'game' }>;
 
@@ -23,8 +34,14 @@ export const gameScreen: Screen = async (ctx, root, r) => {
   const saved = await load<GameState | null>(KEYS.game, null);
   let level: BotLevel = saved?.level ?? 'beginner';
 
+  if (route.quick) {
+    const st = newQuickState(route.quick.color, route.quick.level);
+    await save(KEYS.game, st);
+    await save(KEYS.screen, { name: 'game' });
+    return playView(ctx, root, st);
+  }
   if (route.positionId) {
-    const pos = POSITIONS.find((p) => p.id === route.positionId)!;
+    const pos = ALL_POSITIONS.find((p) => p.id === route.positionId)!;
     const st = newGameState(pos.id, pos.fen, level);
     await save(KEYS.game, st);
     // Next time the popup opens it resumes this game, not a brand-new one.
@@ -65,7 +82,7 @@ function pickerView(ctx: Ctx, root: HTMLElement, level: BotLevel, setLevel: (l: 
     );
   }
   root.append(
-    screenHeader(ctx, 'Finish the Position', 'You’re winning — can you finish the job?'),
+    screenHeader(ctx, GAMES.endgame.name, 'You’re winning — can you finish the job?', undefined, { family: 'bot', back: { name: 'play' }, backLabel: 'Back to Play' }),
     h('div.section-title', null, 'Computer strength'),
     levelPicker(level, setLevel),
     h('div.section-title', null, 'Choose a position'),
@@ -77,7 +94,9 @@ function pickerView(ctx: Ctx, root: HTMLElement, level: BotLevel, setLevel: (l: 
 function playView(ctx: Ctx, root: HTMLElement, state: GameState): ScreenHandle {
   const game = new GameSession(state);
   ctx.focus(true);
-  const pos = POSITIONS.find((p) => p.id === state.positionId);
+  const pos = ALL_POSITIONS.find((p) => p.id === state.positionId);
+  const lesson = LESSONS.find((l) => l.id === state.positionId);
+  const quick = isQuick(state);
   const userColor = state.userColor === 'w' ? 'white' : 'black';
   let token = 0; // invalidates in-flight bot searches after undo / leaving the screen
   let reviewPly: number | null = null;
@@ -85,16 +104,24 @@ function playView(ctx: Ctx, root: HTMLElement, state: GameState): ScreenHandle {
 
   const header = screenHeader(
     ctx,
-    pos?.title ?? 'Finish the Position',
+    gameTitle(state),
     h('span.turn-pill', null, h('span.turn-dot', { class: userColor }), `You play ${userColor === 'white' ? 'White' : 'Black'}`),
-    pos ? h('span.chip', { class: pos.tier }, TIER_LABEL[pos.tier]) : undefined,
+    quick ? h('span.chip', null, `Level ${state.quickLevel}`) : pos ? h('span.chip', { class: pos.tier }, TIER_LABEL[pos.tier]) : undefined,
+    lesson ? { family: 'learn', back: { name: 'lessons' }, backLabel: 'Back to Lessons' } : { family: 'bot', back: { name: 'play' }, backLabel: 'Back to Play' },
   );
-  const goal = h('p', { style: 'margin:0;color:var(--muted)' }, `🎯 ${pos?.goal ?? ''}`);
-  const tip = h('div.card', { hidden: true }, h('div.explain-title', null, icon('bulb', 16), 'Coach tip'), h('p', null, pos?.tip ?? ''));
+  const goal = h('p', { style: 'margin:0;color:var(--muted)' }, `🎯 ${lesson ? 'Steps are under the board. ' : ''}${quick ? `Checkmate the computer (${QUICK_LEVEL_NAME[(state.quickLevel ?? 1) - 1]})` : (pos?.goal ?? '')}`);
+  const tip = h(
+    'div.card',
+    { hidden: !lesson },
+    h('div.explain-title', null, icon('bulb', 16), lesson ? 'How it works' : 'Coach tip'),
+    lesson ? h('ol.lesson-steps', null, lesson.steps.map((s) => h('li', null, s))) : null,
+    h('p', null, pos?.tip ?? ''),
+  );
   const levelRow = levelPicker(state.level, (l) => {
     game.state.level = l;
     persist();
   });
+  levelRow.hidden = quick; // Quick Game keeps the level chosen on its setup screen
   const boardHost = h('div.board-card');
   const status = h('div.feedback', { 'aria-live': 'polite' });
   const moves = h('div.moves', { 'aria-label': 'Moves' });
@@ -161,7 +188,7 @@ function playView(ctx: Ctx, root: HTMLElement, state: GameState): ScreenHandle {
       h(
         'div.toolbar',
         null,
-        toolBtn('bulb', 'Tip', () => (tip.hidden = !tip.hidden), { class: 'accent' }),
+        quick ? null : toolBtn('bulb', 'Tip', () => (tip.hidden = !tip.hidden), { class: 'accent' }),
         toolBtn('undo', 'Undo', () => undo(), { disabled: game.state.moves.length === 0 }),
         toolBtn('flip', 'Flip', () => board.flip(), { 'aria-label': 'Flip board' }),
         toolBtn('flag', 'Resign', () => resign()),
@@ -184,7 +211,7 @@ function playView(ctx: Ctx, root: HTMLElement, state: GameState): ScreenHandle {
     const tipLine =
       res.reason === 'stalemate'
         ? 'Tip: before each move, check the enemy king still has a legal move.'
-        : res.outcome === 'win' ? 'That’s exactly how you convert an advantage.' : 'Every game is practice. Try the position again?';
+        : res.outcome === 'win' ? (quick ? 'Well played! Try a higher level next.' : 'That’s exactly how you convert an advantage.') : quick ? 'Every game is practice. Try again, or pick a lower level.' : 'Every game is practice. Try the position again?';
     const stepper = h(
       'div.toolbar',
       { 'aria-label': 'Review moves' },
@@ -209,8 +236,20 @@ function playView(ctx: Ctx, root: HTMLElement, state: GameState): ScreenHandle {
         h(
           'div.btn-row',
           null,
-          h('button.btn.primary', { onclick: () => ctx.go({ name: 'game', positionId: game.state.positionId }) }, icon('reset', 16), 'Play again'),
-          h('button.btn', { onclick: () => ctx.go({ name: 'game', fresh: true }) }, 'Other positions'),
+          h(
+            'button.btn.primary',
+            {
+              onclick: () =>
+                ctx.go(quick ? { name: 'game', quick: { color: game.state.userColor, level: game.state.quickLevel ?? 3 } } : { name: 'game', positionId: game.state.positionId }),
+            },
+            icon('reset', 16),
+            'Play again',
+          ),
+          quick
+            ? h('button.btn', { onclick: () => ctx.go({ name: 'quick' }) }, 'New setup')
+            : lesson
+              ? h('button.btn', { onclick: () => ctx.go({ name: 'lessons' }) }, 'Other lessons')
+              : h('button.btn', { onclick: () => ctx.go({ name: 'game', fresh: true }) }, 'Other positions'),
         ),
       ),
     );
@@ -236,7 +275,8 @@ function playView(ctx: Ctx, root: HTMLElement, state: GameState): ScreenHandle {
     announce(RESULT_TEXT[res.reason]);
     if (!game.state.recorded) {
       game.state.recorded = true;
-      const badges = recordGame(ctx.progress, res.outcome, ctx.today(), ctx.settings.streakFreeze);
+      const badges = recordGame(ctx.progress, res.outcome, ctx.today(), ctx.settings.streakFreeze, quick ? 'quick' : 'endgame');
+      if (lesson && res.outcome === 'win') badges.push(...recordLearn(ctx.progress, lesson.id, ctx.today()));
       await ctx.saveProgress();
       for (const b of badges) toast(`${b.icon} Badge unlocked: ${b.name}`, 'good', 3200);
     }
@@ -268,7 +308,7 @@ function playView(ctx: Ctx, root: HTMLElement, state: GameState): ScreenHandle {
     const my = ++token;
     board.lock();
     const started = performance.now();
-    const uci = await ctx.engine().bestMove(game.fen(), game.state.level);
+    const uci = await ctx.engine().bestMove(game.fen(), game.state.quickLevel ?? game.state.level);
     // A short pause so instant replies don't feel jarring.
     await new Promise((res) => setTimeout(res, Math.max(0, 350 - (performance.now() - started))));
     if (my !== token) return;

@@ -23,6 +23,26 @@ export const LEVELS: Record<BotLevel, LevelConfig> = {
 
 export const LEVEL_LABEL: Record<BotLevel, string> = { beginner: 'Beginner', intermediate: 'Intermediate' };
 
+/** Quick Game strength, level 1 (very gentle) to 8 (full strength for this build). */
+export const QUICK_LEVELS: LevelConfig[] = [
+  { skill: 0, depth: 1, movetime: 60, slack: 0.5, multipv: 4 },
+  { skill: 0, depth: 2, movetime: 100, slack: 0.35, multipv: 4 },
+  { skill: 2, depth: 3, movetime: 150, slack: 0.25, multipv: 3 },
+  { skill: 5, depth: 5, movetime: 250, slack: 0.1, multipv: 2 },
+  { skill: 8, depth: 7, movetime: 400, slack: 0, multipv: 1 },
+  { skill: 12, depth: 10, movetime: 600, slack: 0, multipv: 1 },
+  { skill: 16, depth: 13, movetime: 900, slack: 0, multipv: 1 },
+  { skill: 20, depth: 16, movetime: 1500, slack: 0, multipv: 1 },
+];
+
+export const QUICK_LEVEL_NAME = ['Rookie', 'Beginner', 'Casual', 'Improving', 'Club', 'Strong club', 'Expert', 'Master'];
+
+/** Config for a bot level: the two Win the Endgame names, or a Quick Game number 1-8. */
+export function levelConfig(level: BotLevel | number): LevelConfig {
+  if (typeof level === 'number') return QUICK_LEVELS[Math.max(1, Math.min(QUICK_LEVELS.length, Math.round(level))) - 1];
+  return LEVELS[level];
+}
+
 type Pending = { resolve: (uci: string) => void; lines: Map<number, { uci: string; score: number }> };
 
 export class Engine {
@@ -83,10 +103,10 @@ export class Engine {
   private lastLines: { uci: string; score: number }[] = [];
 
   /** Best move for the side to move in `fen` at the given bot level. */
-  async bestMove(fen: string, level: BotLevel): Promise<string> {
+  async bestMove(fen: string, level: BotLevel | number): Promise<string> {
     await this.start();
     if (this.failed || !this.worker) return fallbackMove(fen);
-    const cfg = LEVELS[level];
+    const cfg = levelConfig(level);
     const w = this.worker;
     const best = await new Promise<string>((resolve) => {
       this.pending = { resolve, lines: new Map() };
