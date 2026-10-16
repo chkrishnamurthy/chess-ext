@@ -11,7 +11,7 @@ Open the **Developer Dashboard → your item → Store listing**, and use this t
 | Screenshots (add in this order, up to 5) | `screenshots/01-today.png` … `05-learn.png` | 1280 × 800 | Yes, at least 1 |
 | Small promo tile | `assets/promo-small-440x280.png` | 440 × 280 | Yes |
 | Marquee promo tile | `assets/promo-marquee-1400x560.png` | 1400 × 560 | Optional (needed to be featured) |
-| Promo video | a YouTube link | 30–60 seconds | Optional |
+| Promo video | `video/chess-break-promo.webm`: upload it to YouTube (Unlisted is fine), paste the link | 55 seconds, 1280 × 720 | Optional |
 
 The extension's own icons (16, 32, 48, 128) are inside the build (`public/icons/`) and need no upload.
 
@@ -38,7 +38,7 @@ Copy these from [LISTING.md](LISTING.md):
 
 ## Links and contact (you must fill these in)
 
-- **Support email:** _not set yet_. Needed in the dashboard and in `PRIVACY.md`.
+- **Support email:** chalapatikrishna@gmail.com (already in `PRIVACY.md`).
 - **Privacy policy URL:** host the text of `PRIVACY.md` at a public web address and paste the link.
 - **Homepage / source:** https://github.com/chkrishnamurthy/chess-ext
 

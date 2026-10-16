@@ -22,4 +22,4 @@ Chess Break does **not** collect, transmit, sell or share any personal data.
 
 Chess Break is open source (GPL-3.0). You can read exactly what it does: https://github.com/chkrishnamurthy/chess-ext
 
-Contact: _add a support email or URL before publishing_.
+Contact: chalapatikrishna@gmail.com.
