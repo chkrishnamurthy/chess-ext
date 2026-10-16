@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chess Break: Privacy Policy</title>
+<style>
+  :root{--bg:#f5f7f6;--fg:#10241a;--muted:#4b6356;--line:#d5e0d9;--accent:#14683c;--card:#fff}
+  @media (prefers-color-scheme:dark){:root{--bg:#0f1713;--fg:#e6f0ea;--muted:#9bb2a5;--line:#2a3a31;--accent:#5fcf93;--card:#16211b}}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--fg);font:17px/1.6 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+  main{max-width:720px;margin:0 auto;padding:40px 20px 64px}
+  h1{font-size:2rem;line-height:1.2;margin:0 0 4px}
+  h2{font-size:1.25rem;margin:32px 0 8px}
+  .meta{color:var(--muted);margin:0 0 20px}
+  .lead{background:var(--card);border:1px solid var(--line);border-left:5px solid var(--accent);border-radius:10px;padding:14px 18px;font-weight:700}
+  ul{padding-left:1.2em}li{margin:8px 0}
+  table{border-collapse:collapse;width:100%;background:var(--card);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+  th,td{text-align:left;vertical-align:top;padding:10px 14px;border-bottom:1px solid var(--line)}
+  th{font-size:.85rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted)}
+  tr:last-child td{border-bottom:0}
+  a{color:var(--accent)}code{font-size:.92em}
+</style>
+</head>
+<body>
+<main>
+  <h1>Chess Break: Privacy Policy</h1>
+  <p class="meta">Last updated: 2026-10-15</p>
+
+  <p class="lead">Chess Break does not collect, transmit, sell or share any personal data.</p>
+
+  <ul>
+    <li><strong>No account.</strong> You never sign in.</li>
+    <li><strong>No network access.</strong> The extension works fully offline. The chess engine (Stockfish), the puzzles and all images ship inside the extension. Nothing is downloaded at runtime.</li>
+    <li><strong>Local storage only.</strong> Your settings, puzzle progress, streaks and saved games stay in your browser (<code>chrome.storage.local</code>) on this device. They are never synced or uploaded.</li>
+    <li><strong>You control your data.</strong> Settings → Data lets you export it to a file, import it back, or delete everything at any time. Uninstalling the extension also removes it.</li>
+    <li><strong>No analytics, no ads, no tracking.</strong></li>
+    <li><strong>No reading of websites.</strong> Chess Break doesn't read pages you visit and never touches games on Chess.com, Lichess or any other site. When you click its icon it places its own window on top of the current tab; the app runs in an isolated frame the page can't see into.</li>
+  </ul>
+
+  <h2>Permissions</h2>
+  <table>
+    <thead><tr><th>Permission</th><th>Why</th></tr></thead>
+    <tbody>
+      <tr><td><code>storage</code></td><td>To save your progress, streak, settings and the game or puzzle in progress on your device</td></tr>
+      <tr><td><code>activeTab</code>, <code>scripting</code></td><td>To show the Chess Break window on the tab you clicked the icon on, only when you click</td></tr>
+      <tr><td><code>sidePanel</code></td><td>Fallback on browser pages (like the New Tab page) where the window can't be shown</td></tr>
+      <tr><td>Site access (optional, off by default)</td><td>Only if you turn on the quick-open button, to show a small button in the corner of pages. Nothing is read from them.</td></tr>
+    </tbody>
+  </table>
+
+  <h2>Open source</h2>
+  <p>Chess Break is open source (GPL-3.0). You can read exactly what it does: <a href="https://github.com/chkrishnamurthy/chess-ext">github.com/chkrishnamurthy/chess-ext</a></p>
+
+  <h2>Contact</h2>
+  <p><a href="mailto:chalapatikrishna@gmail.com">chalapatikrishna@gmail.com</a></p>
+</main>
+</body>
+</html>
